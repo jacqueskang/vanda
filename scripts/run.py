@@ -96,8 +96,11 @@ def main():
     print("=" * 60)
     print()
     
-    # Open browser
-    webbrowser.open("http://127.0.0.1:8088/")
+    # Open browser (with graceful fallback if not available)
+    try:
+        webbrowser.open("http://127.0.0.1:8088/")
+    except Exception:
+        pass
     
     # Wait for processes
     def signal_handler(sig, frame):
