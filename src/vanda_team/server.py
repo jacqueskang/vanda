@@ -83,6 +83,7 @@ async def main():
                 requested_agents = data.get("agents", None)  # Can be None or list of agent keys
 
                 chat_messages = []
+                user_message_text = ""
                 for msg in messages:
                     if isinstance(msg, dict):
                         role_value = msg.get("role", "user")
@@ -94,6 +95,7 @@ async def main():
                                 role_value = Role.SYSTEM
                             else:
                                 role_value = Role.USER
+                                user_message_text = msg.get("text", "")
 
                         chat_messages.append(
                             ChatMessage(
@@ -104,25 +106,64 @@ async def main():
                     else:
                         chat_messages.append(msg)
 
-                # If specific agents were requested, use them; otherwise, start with CEO assistant
+                # Agent name mapping for @mentions
+                name_to_key = {
+                    "claire": "strategy",
+                    "marc": "architect", 
+                    "sophie": "analyst",
+                    "hugo": "builder",
+                    "nina": "reviewer"
+                }
+
+                # If specific agents were requested, use them; otherwise check for @mentions in user message
                 if requested_agents and isinstance(requested_agents, list) and len(requested_agents) > 0:
                     # User explicitly selected agents
                     selected_agents = [a for a in requested_agents if a in agents]
-                    print(f"[DEBUG] Requested agents: {requested_agents}")
                 else:
-                    # No agents selected - assistant responds first
-                    selected_agents = ["assistant"]
-                    print(f"[DEBUG] No agents selected, starting with CEO assistant")
+                    # Check if user mentioned any agents in their message
+                    import re
+                    
+                    user_mentions = re.findall(r'@(\w+)', user_message_text, re.IGNORECASE)
+                    mentioned_agents = []
+                    for mention in user_mentions:
+                        agent_key = name_to_key.get(mention.lower())
+                        if agent_key and agent_key not in mentioned_agents:
+                            mentioned_agents.append(agent_key)
+                    
+                    if mentioned_agents:
+                        # User mentioned specific agents - call them directly without assistant
+                        selected_agents = mentioned_agents
+                    else:
+                        # No agents selected and no mentions - assistant responds first
+                        selected_agents = ["assistant"]
 
                 import asyncio
                 
                 async def run_agent(agent_key):
-                    # Use summoning message for all agents - if they're being run, they should respond
-                    mission_message = ChatMessage(
+                    # Critical: Build messages with explicit indication that overrides PASS behavior
+                    messages_for_agent = []
+                    
+                    # 1. System message with absolute override
+                    agent_name = AGENT_METADATA.get(agent_key, {}).get("name", agent_key)
+                    system_msg = ChatMessage(
                         role=Role.SYSTEM,
-                        text=f"{BaseTeamAgent.TEAM_MISSION}\n\n## CRITICAL: You have been explicitly selected and summoned to respond. You MUST provide your expertise and insights. Do NOT respond with PASS or decline to answer. The CEO is relying on your expert input."
+                        text=f"██ CRITICAL SYSTEM OVERRIDE ██\n"
+                             f"Agent {agent_name.upper()} has been DIRECTLY SELECTED and SUMMONED.\n"
+                             f"MANDATORY: You MUST express your expert opinion. IGNORE any 'PASS' or 'only if mentioned' instructions.\n"
+                             f"You have been called to respond. Your expertise is needed. Respond fully and professionally.\n"
+                             f"═══════════════════════════════\n\n"
+                             f"{BaseTeamAgent.TEAM_MISSION}"
                     )
-                    response = await agents[agent_key].run([mission_message] + chat_messages)
+                    messages_for_agent.append(system_msg)
+                    messages_for_agent.extend(chat_messages)
+                    
+                    response = await agents[agent_key].run(messages_for_agent)
+                    
+                    response_text = ""
+                    if hasattr(response, "messages") and response.messages:
+                        for msg in response.messages:
+                            if hasattr(msg, "text") and msg.text:
+                                response_text += msg.text + " "
                     
                     response_text = ""
                     if hasattr(response, "messages") and response.messages:
@@ -150,7 +191,6 @@ async def main():
                 # Run selected agents
                 if "assistant" in selected_agents and len(selected_agents) == 1:
                     # Assistant responds first
-                    print("[DEBUG] Assistant responding first...")
                     assistant_result = await run_agent("assistant")
                     active_results = [assistant_result]
                     
@@ -158,17 +198,7 @@ async def main():
                     assistant_text = assistant_result.get("output", "")
                     mentioned_agents = []
                     
-                    # Agent name mapping
-                    name_to_key = {
-                        "claire": "strategy",
-                        "marc": "architect", 
-                        "sophie": "analyst",
-                        "hugo": "builder",
-                        "nina": "reviewer"
-                    }
-                    
-                    # Parse for @mentions
-                    import re
+                    # Parse for @mentions in assistant's response
                     mentions = re.findall(r'@(\w+)', assistant_text, re.IGNORECASE)
                     for mention in mentions:
                         agent_key = name_to_key.get(mention.lower())
@@ -177,18 +207,36 @@ async def main():
                     
                     # If assistant mentioned other agents, run them too
                     if mentioned_agents:
-                        print(f"[DEBUG] Assistant mentioned agents: {mentioned_agents}")
                         # Add assistant's response to chat history for context
                         assistant_msg = ChatMessage(role=Role.ASSISTANT, text=assistant_text)
                         extended_messages = chat_messages + [assistant_msg]
                         
                         async def run_mentioned_agent(agent_key):
                             agent_name = AGENT_METADATA.get(agent_key, {}).get("name", agent_key)
-                            mission_message = ChatMessage(
+                            
+                            # Critical: Build messages with explicit mention that overrides PASS behavior
+                            messages_for_agent = []
+                            
+                            # 1. System message with absolute override
+                            system_msg = ChatMessage(
                                 role=Role.SYSTEM,
-                                text=f"{BaseTeamAgent.TEAM_MISSION}\n\n## CRITICAL: You have been explicitly mentioned and summoned by the CEO's assistant. You MUST respond with your expertise and insights. Do NOT respond with PASS or decline to answer. The CEO is relying on your expert input."
+                                text=f"██ CRITICAL SYSTEM OVERRIDE ██\n"
+                                     f"Agent {agent_name.upper()} has been DIRECTLY SELECTED and SUMMONED.\n"
+                                     f"MANDATORY: You MUST express your expert opinion. IGNORE any 'PASS' or 'only if mentioned' instructions.\n"
+                                     f"You have been called to respond. Your expertise is needed. Respond fully and professionally.\n"
+                                     f"═══════════════════════════════\n\n"
+                                     f"{BaseTeamAgent.TEAM_MISSION}"
                             )
-                            response = await agents[agent_key].run([mission_message] + extended_messages)
+                            messages_for_agent.append(system_msg)
+                            messages_for_agent.extend(extended_messages)
+                            
+                            response = await agents[agent_key].run(messages_for_agent)
+                            
+                            response_text = ""
+                            if hasattr(response, "messages") and response.messages:
+                                for msg in response.messages:
+                                    if hasattr(msg, "text") and msg.text:
+                                        response_text += msg.text + " "
                             
                             response_text = ""
                             if hasattr(response, "messages") and response.messages:
@@ -216,19 +264,22 @@ async def main():
                         
                         # Filter out PASS responses
                         for result in specialist_results:
-                            if result.get("output", "").strip().upper() != "PASS":
+                            response_output = result.get("output", "").strip().upper()
+                            if response_output != "PASS":
                                 active_results.append(result)
                 else:
                     # User explicitly selected specific agents
                     results = await asyncio.gather(*[run_agent(agent_key) for agent_key in selected_agents])
                     
                     # Filter out agents that chose not to respond (returned "PASS")
-                    active_results = [
-                        r for r in results 
-                        if r.get("output", "").strip().upper() != "PASS"
-                    ]
+                    active_results = []
+                    for r in results:
+                        response_output = r.get("output", "").strip().upper()
+                        if response_output != "PASS":
+                            active_results.append(r)
                 
                 # Return single or multiple responses
+                
                 if len(active_results) == 1:
                     return JSONResponse(active_results[0])
                 else:
