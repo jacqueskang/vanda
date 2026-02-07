@@ -15,7 +15,7 @@
       "label": "Run Agent Server",
       "type": "shell",
       "command": "${command:python.interpreterPath}",
-      "args": ["business_team.py"],
+      "args": ["scripts/business_team.py"],
       "isBackground": true,
       "presentation": {
         "reveal": "always",

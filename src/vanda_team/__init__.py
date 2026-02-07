@@ -1,0 +1,1 @@
+"""Vanda business team package."""

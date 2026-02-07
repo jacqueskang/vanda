@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Start the web UI server and automatically open it in your default browser.
-Usage: python start_web_ui.py
+Usage: python scripts/start_web_ui.py
 """
 
 import os
@@ -11,23 +11,39 @@ import threading
 import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
+from functools import partial
 
 PORT = 8000
 HOST = "127.0.0.1"
+ROOT_DIR = Path(__file__).resolve().parents[1]
+WEB_DIR = ROOT_DIR / "web"
 
 
 class WebUIHandler(SimpleHTTPRequestHandler):
     """Serve web_ui.html as the default page."""
-    
+
     def do_GET(self):
-        # Serve web_ui.html for root path
-        if self.path == "/" or self.path == "":
-            self.path = "/web_ui.html"
-        
-        try:
-            return super().do_GET()
-        except Exception as e:
-            self.send_error(404, str(e))
+        # Serve the main UI directly to avoid directory issues.
+        if self.path in ("/", "", "/web_ui.html"):
+            try:
+                content = (WEB_DIR / "web_ui.html").read_bytes()
+            except Exception as e:
+                self.send_error(404, str(e))
+                return
+
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
+            return
+
+        if self.path == "/favicon.ico":
+            self.send_response(204)
+            self.end_headers()
+            return
+
+        self.send_error(404, "Not found")
     
     def log_message(self, format, *args):
         """Suppress default logging."""
@@ -48,9 +64,10 @@ def start_server():
 
 def main(skip_browser=False):
     # Check if web_ui.html exists
-    if not os.path.exists("web_ui.html"):
-        print("Error: web_ui.html not found in current directory")
-        print(f"Current directory: {os.getcwd()}")
+    ui_file = WEB_DIR / "web_ui.html"
+    if not ui_file.exists():
+        print("Error: web_ui.html not found in web/ directory")
+        print(f"Expected path: {ui_file}")
         sys.exit(1)
     
     # Start server in background thread

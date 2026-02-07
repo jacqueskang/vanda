@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Simple CLI tool to ask questions to your AI business team.
-Usage: python ask_team.py "Your question here"
+Usage: python scripts/ask_team.py "Your question here"
 """
 
 import sys
@@ -73,11 +73,11 @@ async def ask_team(question: str) -> None:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python ask_team.py \"Your question here\"")
+        print("Usage: python scripts/ask_team.py \"Your question here\"")
         print("\nExamples:")
-        print('  python ask_team.py "Design our MVP"')
-        print('  python ask_team.py "What are the top 3 technical challenges?"')
-        print('  python ask_team.py "Create a 6-month roadmap"')
+        print('  python scripts/ask_team.py "Design our MVP"')
+        print('  python scripts/ask_team.py "What are the top 3 technical challenges?"')
+        print('  python scripts/ask_team.py "Create a 6-month roadmap"')
         sys.exit(1)
     
     question = " ".join(sys.argv[1:])

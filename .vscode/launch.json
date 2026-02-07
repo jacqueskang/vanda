@@ -5,7 +5,7 @@
       "name": "Debug Business Team (HTTP Server)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/business_team.py",
+      "program": "${workspaceFolder}/scripts/business_team.py",
       "console": "integratedTerminal",
       "justMyCode": false,
       "env": {

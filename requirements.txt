@@ -18,3 +18,13 @@ agent-dev-cli>=0.0.1b260128
 
 # GitHub models support (optional, for using GitHub-hosted models)
 # Requires GITHUB_TOKEN environment variable
+
+# GitHub API library (simpler than raw HTTP calls)
+PyGithub>=2.0.0
+
+# LangChain tools for StrategyAgent research
+langchain>=0.2.0
+langchain-community>=0.2.0
+duckduckgo-search>=6.0.0
+ddgs>=9.0.0
+wikipedia>=1.4.0

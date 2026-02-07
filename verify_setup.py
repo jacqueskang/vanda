@@ -79,13 +79,13 @@ def main():
     if py_ok and deps_ok:
         if env_ok:
             print("✅ All checks passed! Ready to run:")
-            print("   python business_team.py")
+            print("   python scripts/business_team.py")
         else:
             print("⚠️  Partial: Code is ready, but configuration incomplete")
             print("\nTo complete setup:")
             print("1. Get GitHub token: https://github.com/settings/tokens")
             print("2. Edit .env and set GITHUB_TOKEN=your_token")
-            print("3. Run: python business_team.py")
+            print("3. Run: python scripts/business_team.py")
     else:
         print("❌ Setup incomplete. Run: pip install -r requirements.txt")
     
