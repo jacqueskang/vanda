@@ -117,7 +117,11 @@ async def main():
                 import asyncio
                 
                 async def run_agent(agent_key):
-                    mission_message = ChatMessage(role=Role.SYSTEM, text=BaseTeamAgent.TEAM_MISSION)
+                    # Use summoning message for all agents - if they're being run, they should respond
+                    mission_message = ChatMessage(
+                        role=Role.SYSTEM,
+                        text=f"{BaseTeamAgent.TEAM_MISSION}\n\n## CRITICAL: You have been explicitly selected and summoned to respond. You MUST provide your expertise and insights. Do NOT respond with PASS or decline to answer. The CEO is relying on your expert input."
+                    )
                     response = await agents[agent_key].run([mission_message] + chat_messages)
                     
                     response_text = ""
@@ -179,7 +183,11 @@ async def main():
                         extended_messages = chat_messages + [assistant_msg]
                         
                         async def run_mentioned_agent(agent_key):
-                            mission_message = ChatMessage(role=Role.SYSTEM, text=BaseTeamAgent.TEAM_MISSION)
+                            agent_name = AGENT_METADATA.get(agent_key, {}).get("name", agent_key)
+                            mission_message = ChatMessage(
+                                role=Role.SYSTEM,
+                                text=f"{BaseTeamAgent.TEAM_MISSION}\n\n## CRITICAL: You have been explicitly mentioned and summoned by the CEO's assistant. You MUST respond with your expertise and insights. Do NOT respond with PASS or decline to answer. The CEO is relying on your expert input."
+                            )
                             response = await agents[agent_key].run([mission_message] + extended_messages)
                             
                             response_text = ""
