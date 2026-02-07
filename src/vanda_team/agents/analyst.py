@@ -13,6 +13,7 @@ class BusinessAnalystAgent(BaseTeamAgent):
     gender = "female"
     role_title = "Business Analyst"
     avatar_url = "https://i.pravatar.cc/64?img=48"
+    model_name = ""
     role_description = (
         "a meticulous and highly organized product manager and business analyst who thrives on turning vision into reality. "
         "Your role is to translate strategy and architecture into concrete product requirements."

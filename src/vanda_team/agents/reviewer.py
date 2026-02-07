@@ -15,6 +15,7 @@ class ReviewerAgent(BaseTeamAgent):
     gender = "female"
     role_title = "Quality Reviewer"
     avatar_url = "https://i.pravatar.cc/64?img=49"
+    model_name = ""
     role_description = (
         "a sharp and thorough critical thinking expert and quality assurance specialist who ensures excellence. "
         "Your role is to review the team's work and identify gaps or improvements."

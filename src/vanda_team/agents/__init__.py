@@ -1,5 +1,6 @@
 """AI Business Team - Multi-agent coordinator system."""
 
+import os
 from typing import Never
 
 from agent_framework import (
@@ -12,11 +13,6 @@ from agent_framework import (
 )
 
 from vanda_team.model_client import get_model_client
-from vanda_team.tools_strategy import (
-    strategy_fetch_url,
-    strategy_web_search,
-    strategy_wikipedia_lookup,
-)
 
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
@@ -57,6 +53,7 @@ async def get_or_create_agents():
 
     client = await get_model_client()
     _client_cache = client
+    client_cache: dict[str, object] = {}
 
     # Specialist agents only respond when explicitly mentioned
     specialist_instructions = (
@@ -65,36 +62,48 @@ async def get_or_create_agents():
         "When you ARE mentioned, provide a helpful, focused response in your area of expertise."
     )
 
-    strategy_agent = client.create_agent(
-        name="StrategyAgent",
-        instructions=StrategyAgent.build_instructions_with_tools(TEAM_MISSION) + specialist_instructions,
-        tools=[strategy_web_search, strategy_wikipedia_lookup, strategy_fetch_url],
+    strategy_agent = await StrategyAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        instruction_suffix=specialist_instructions,
+        client_cache=client_cache,
     )
 
-    architect_agent = client.create_agent(
-        name="TechnicalArchitectAgent",
-        instructions=TechnicalArchitectAgent.build_instructions(TEAM_MISSION) + specialist_instructions,
+    architect_agent = await TechnicalArchitectAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        instruction_suffix=specialist_instructions,
+        client_cache=client_cache,
     )
 
-    analyst_agent = client.create_agent(
-        name="BusinessAnalystAgent",
-        instructions=BusinessAnalystAgent.build_instructions(TEAM_MISSION) + specialist_instructions,
+    analyst_agent = await BusinessAnalystAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        instruction_suffix=specialist_instructions,
+        client_cache=client_cache,
     )
 
-    builder_agent = client.create_agent(
-        name="BuilderAgent",
-        instructions=BuilderAgent.build_instructions(TEAM_MISSION) + specialist_instructions,
+    builder_agent = await BuilderAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        instruction_suffix=specialist_instructions,
+        client_cache=client_cache,
     )
 
-    reviewer_agent = client.create_agent(
-        name="ReviewerAgent",
-        instructions=ReviewerAgent.build_instructions(TEAM_MISSION) + specialist_instructions,
+    reviewer_agent = await ReviewerAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        instruction_suffix=specialist_instructions,
+        client_cache=client_cache,
     )
 
     # CEO Assistant never passes - always available to help
-    assistant_agent = client.create_agent(
-        name="CEOAssistantAgent",
-        instructions=CEOAssistantAgent.build_instructions(TEAM_MISSION),
+    assistant_model_name = os.getenv("ASSISTANT_MODEL_NAME", "").strip()
+    CEOAssistantAgent.model_name = assistant_model_name
+    assistant_agent = await CEOAssistantAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        client_cache=client_cache,
     )
 
     _agents_cache = {
@@ -120,33 +129,38 @@ async def get_or_create_workflow():
 
     client = await get_model_client()
     _client_cache = client
+    client_cache: dict[str, object] = {}
 
     print("[*] Creating specialized agents...")
 
-    strategy_agent = client.create_agent(
-        name="StrategyAgent",
-        instructions=StrategyAgent.build_instructions_with_tools(TEAM_MISSION),
-        tools=[strategy_web_search, strategy_wikipedia_lookup, strategy_fetch_url],
+    strategy_agent = await StrategyAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        client_cache=client_cache,
     )
 
-    architect_agent = client.create_agent(
-        name="TechnicalArchitectAgent",
-        instructions=TechnicalArchitectAgent.build_instructions(TEAM_MISSION),
+    architect_agent = await TechnicalArchitectAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        client_cache=client_cache,
     )
 
-    analyst_agent = client.create_agent(
-        name="BusinessAnalystAgent",
-        instructions=BusinessAnalystAgent.build_instructions(TEAM_MISSION),
+    analyst_agent = await BusinessAnalystAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        client_cache=client_cache,
     )
 
-    builder_agent = client.create_agent(
-        name="BuilderAgent",
-        instructions=BuilderAgent.build_instructions(TEAM_MISSION),
+    builder_agent = await BuilderAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        client_cache=client_cache,
     )
 
-    reviewer_agent = client.create_agent(
-        name="ReviewerAgent",
-        instructions=ReviewerAgent.build_instructions(TEAM_MISSION),
+    reviewer_agent = await ReviewerAgent.create_agent(
+        client,
+        TEAM_MISSION,
+        client_cache=client_cache,
     )
 
     print("[-] Building multi-agent workflow...")

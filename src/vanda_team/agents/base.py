@@ -1,6 +1,7 @@
 """Base team agent class with shared properties and methods."""
 
 from agent_framework import ChatAgent, Executor
+from vanda_team.model_client import get_model_client
 
 
 class BaseTeamAgent(Executor):
@@ -11,6 +12,8 @@ class BaseTeamAgent(Executor):
     gender: str = ""
     role_title: str = ""
     avatar_url: str = ""
+    model_name: str = ""
+    tools: list = []
     personality: str = ""
     focus_areas: list[str] = []
     role_description: str = ""  # Override in subclasses for specific role instructions
@@ -28,6 +31,7 @@ class BaseTeamAgent(Executor):
             "gender": cls.gender,
             "role": cls.role_title,
             "avatar_url": cls.avatar_url,
+            "model_name": cls.model_name,
         }
 
     @classmethod
@@ -66,3 +70,41 @@ class BaseTeamAgent(Executor):
         instructions += tools_info
         instructions += "\n\nKeep responses short and high-signal (3-6 bullets or 1-2 short paragraphs)."
         return instructions
+
+    @classmethod
+    async def create_agent(
+        cls,
+        default_client: ChatAgent,
+        mission: str,
+        instruction_suffix: str = "",
+        client_cache: dict | None = None,
+    ) -> ChatAgent:
+        """Create an agent instance with optional custom model."""
+        if client_cache is None:
+            client_cache = {}
+        
+        # Get the right client based on model_name
+        model_name = cls.model_name.strip() if cls.model_name else ""
+        if model_name and model_name not in client_cache:
+            client_cache[model_name] = await get_model_client(model_name)
+        
+        client = client_cache.get(model_name, default_client) if model_name else default_client
+        
+        # Build instructions
+        if cls.tools:
+            instructions = cls.build_instructions_with_tools(mission)
+        else:
+            instructions = cls.build_instructions(mission)
+        instructions += instruction_suffix
+        
+        # Create agent
+        if cls.tools:
+            return client.create_agent(
+                name=f"{cls.__name__}",
+                instructions=instructions,
+                tools=cls.tools,
+            )
+        return client.create_agent(
+            name=f"{cls.__name__}",
+            instructions=instructions,
+        )

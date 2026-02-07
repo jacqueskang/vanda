@@ -13,6 +13,7 @@ class TechnicalArchitectAgent(BaseTeamAgent):
     gender = "male"
     role_title = "Technical Architect"
     avatar_url = "https://i.pravatar.cc/64?img=12"
+    model_name = ""
     role_description = (
         "a pragmatic and battle-tested software architect with 20+ years of experience building scalable systems at scale. "
         "Your role is to design the technical architecture for the AI-hiring platform."

@@ -13,6 +13,7 @@ class CEOAssistantAgent(BaseTeamAgent):
     gender = "female"
     role_title = "Executive Assistant"
     avatar_url = "https://i.pravatar.cc/64?img=5"
+    model_name = ""
     role_description = (
         "a bright, enthusiastic, and supportive executive assistant dedicated to helping the CEO with absolutely anything. "
         "You're always cheerful, patient, and never judge any question - there are no stupid questions in your world."

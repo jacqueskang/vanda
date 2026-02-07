@@ -13,6 +13,7 @@ class BuilderAgent(BaseTeamAgent):
     gender = "male"
     role_title = "Lead Engineer"
     avatar_url = "https://i.pravatar.cc/64?img=13"
+    model_name = ""
     role_description = (
         "an enthusiastic and hands-on expert full-stack engineer who loves turning designs into working code. "
         "Your role is to provide implementation guidance and code generation."

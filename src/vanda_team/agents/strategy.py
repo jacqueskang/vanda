@@ -3,6 +3,11 @@
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
 from vanda_team.agents.base import BaseTeamAgent
+from vanda_team.tools_strategy import (
+    strategy_fetch_url,
+    strategy_web_search,
+    strategy_wikipedia_lookup,
+)
 
 
 class StrategyAgent(BaseTeamAgent):
@@ -13,6 +18,8 @@ class StrategyAgent(BaseTeamAgent):
     gender = "female"
     role_title = "Strategy Lead"
     avatar_url = "https://i.pravatar.cc/64?img=47"
+    model_name = ""
+    tools = [strategy_web_search, strategy_wikipedia_lookup, strategy_fetch_url]
     role_description = (
         "a brilliant and visionary business strategist with deep expertise in AI, labor markets, and emerging platform opportunities. "
         "Your role is to analyze the market opportunity for an AI-hiring platform where AI agents can hire humans for services."
