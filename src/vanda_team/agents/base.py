@@ -52,6 +52,11 @@ class BaseTeamAgent(Executor):
         }
 
     @classmethod
+    async def get_default_client(cls) -> ChatAgent:
+        """Get the default model client."""
+        return await get_model_client()
+
+    @classmethod
     def build_instructions(cls, tools_info: str = "") -> str:
         """Build instructions dynamically from class properties."""
         focus_text = "\n".join(f"{i+1}. {area}" for i, area in enumerate(cls.focus_areas))
@@ -89,17 +94,14 @@ class BaseTeamAgent(Executor):
         return instructions
 
     @classmethod
-    async def create_agent(
-        cls,
-        default_client: ChatAgent,
-    ) -> ChatAgent:
+    async def create_agent(cls) -> ChatAgent:
         """Create an agent instance with optional custom model."""
         # Get the right client based on model_name
         model_name = cls.model_name.strip() if cls.model_name else ""
         if model_name:
             client = await get_model_client(model_name)
         else:
-            client = default_client
+            client = await cls.get_default_client()
         
         # Build instructions
         if cls.tools:

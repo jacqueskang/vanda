@@ -12,8 +12,6 @@ from agent_framework import (
     handler,
 )
 
-from vanda_team.model_client import get_model_client
-
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
 from .assistant import CEOAssistantAgent
@@ -43,34 +41,20 @@ async def get_or_create_agents():
     if _agents_cache is not None:
         return _agents_cache
 
-    client = await get_model_client()
+    strategy_agent = await StrategyAgent.create_agent()
 
-    strategy_agent = await StrategyAgent.create_agent(
-        client,
-    )
+    architect_agent = await TechnicalArchitectAgent.create_agent()
 
-    architect_agent = await TechnicalArchitectAgent.create_agent(
-        client,
-    )
+    analyst_agent = await BusinessAnalystAgent.create_agent()
 
-    analyst_agent = await BusinessAnalystAgent.create_agent(
-        client,
-    )
+    builder_agent = await BuilderAgent.create_agent()
 
-    builder_agent = await BuilderAgent.create_agent(
-        client,
-    )
-
-    reviewer_agent = await ReviewerAgent.create_agent(
-        client,
-    )
+    reviewer_agent = await ReviewerAgent.create_agent()
 
     # CEO Assistant never passes - always available to help
     assistant_model_name = os.getenv("ASSISTANT_MODEL_NAME", "").strip()
     CEOAssistantAgent.model_name = assistant_model_name
-    assistant_agent = await CEOAssistantAgent.create_agent(
-        client,
-    )
+    assistant_agent = await CEOAssistantAgent.create_agent()
 
     _agents_cache = {
         "strategy": strategy_agent,
@@ -93,29 +77,17 @@ async def get_or_create_workflow():
 
     print("[*] Initializing AI agent team...")
 
-    client = await get_model_client()
-
     print("[*] Creating specialized agents...")
 
-    strategy_agent = await StrategyAgent.create_agent(
-        client,
-    )
+    strategy_agent = await StrategyAgent.create_agent()
 
-    architect_agent = await TechnicalArchitectAgent.create_agent(
-        client,
-    )
+    architect_agent = await TechnicalArchitectAgent.create_agent()
 
-    analyst_agent = await BusinessAnalystAgent.create_agent(
-        client,
-    )
+    analyst_agent = await BusinessAnalystAgent.create_agent()
 
-    builder_agent = await BuilderAgent.create_agent(
-        client,
-    )
+    builder_agent = await BuilderAgent.create_agent()
 
-    reviewer_agent = await ReviewerAgent.create_agent(
-        client,
-    )
+    reviewer_agent = await ReviewerAgent.create_agent()
 
     print("[-] Building multi-agent workflow...")
 
