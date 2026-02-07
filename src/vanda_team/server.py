@@ -2,58 +2,11 @@
 
 import sys
 from pathlib import Path
-from typing import Never
 
-from agent_framework import (
-    ChatMessage,
-    Executor,
-    Role,
-    WorkflowContext,
-    WorkflowOutputEvent,
-    handler,
-)
+from agent_framework import Role, ChatMessage
 
 from vanda_team import config as _config  # Loads .env
 from vanda_team.agents import AGENT_METADATA, get_or_create_agents, get_or_create_workflow, BaseTeamAgent
-
-
-class BusinessTeamAgent(Executor):
-    """Wrapper executor that coordinates the business team."""
-
-    def __init__(self, id: str = "business-team"):
-        super().__init__(id=id)
-
-    @handler
-    async def handle_request(
-        self,
-        messages: list[ChatMessage],
-        ctx: WorkflowContext[Never, str],
-    ) -> None:
-        workflow = await get_or_create_workflow()
-
-        user_input = ""
-        for msg in messages:
-            if msg.role == Role.USER:
-                if msg.contents and hasattr(msg.contents[0], "text"):
-                    user_input = msg.contents[0].text
-                    break
-
-        if not user_input:
-            user_input = (
-                "Help me develop a comprehensive business plan and technical strategy "
-                "for an AI-hiring platform where AI agents can hire humans for services."
-            )
-
-        print(f"\n[User] {user_input[:80]}...")
-
-        initial_message = ChatMessage(role=Role.USER, text=user_input)
-
-        async for event in workflow.run_stream(initial_message):
-            if isinstance(event, WorkflowOutputEvent):
-                final_output = event.data
-                print(f"\n[Team Output] {final_output[:200]}...")
-                await ctx.yield_output(final_output)
-                return
 
 
 async def main():
@@ -365,4 +318,4 @@ async def main():
         sys.exit(1)
 
 
-__all__ = ["BusinessTeamAgent", "main"]
+__all__ = ["main"]
