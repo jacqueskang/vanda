@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Check Prerequisites",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-c", "import agent_framework; print('✅ All dependencies OK')"],
+      "isBackground": false,
+      "presentation": {
+        "reveal": "silent"
+      }
+    },
+    {
+      "label": "Run Agent Server",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["business_team.py"],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".*",
+            "file": 0,
+            "location": 1,
+            "message": 2
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "Application startup complete|running on|error|Error|ERROR"
+        }
+      }
+    },
+    {
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "${command:python.interpreterPath}",
+      "args": ["-m", "pip", "install", "-r", "requirements.txt"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always"
+      }
+    }
+  ]
+}

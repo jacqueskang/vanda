@@ -1,0 +1,20 @@
+# Microsoft Agent Framework (pinned to avoid breaking changes)
+agent-framework-azure-ai==1.0.0b260107
+agent-framework-core==1.0.0b260107
+
+# Azure Identity for authentication (let pip resolve version conflicts)
+azure-identity
+
+# HTTP Server for Agent
+azure-ai-agentserver-core==1.0.0b10
+azure-ai-agentserver-agentframework==1.0.0b10
+
+# Environment variable management
+python-dotenv>=1.2.1
+
+# Debugging support
+debugpy==1.8.20
+agent-dev-cli>=0.0.1b260128
+
+# GitHub models support (optional, for using GitHub-hosted models)
+# Requires GITHUB_TOKEN environment variable

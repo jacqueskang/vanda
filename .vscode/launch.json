@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Business Team (HTTP Server)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/business_team.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      },
+      "args": [],
+      "preLaunchTask": "Check Prerequisites"
+    }
+  ]
+}
