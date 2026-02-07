@@ -1,6 +1,5 @@
 """AI Business Team - Multi-agent coordinator system."""
 
-import os
 from typing import Never
 
 from agent_framework import (
@@ -42,18 +41,10 @@ async def get_or_create_agents():
         return _agents_cache
 
     strategy_agent = await StrategyAgent.create_agent()
-
     architect_agent = await TechnicalArchitectAgent.create_agent()
-
     analyst_agent = await BusinessAnalystAgent.create_agent()
-
     builder_agent = await BuilderAgent.create_agent()
-
     reviewer_agent = await ReviewerAgent.create_agent()
-
-    # CEO Assistant never passes - always available to help
-    assistant_model_name = os.getenv("ASSISTANT_MODEL_NAME", "").strip()
-    CEOAssistantAgent.model_name = assistant_model_name
     assistant_agent = await CEOAssistantAgent.create_agent()
 
     _agents_cache = {
