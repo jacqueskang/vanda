@@ -20,6 +20,7 @@ from vanda_team.tools_strategy import (
 
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
+from .assistant import CEOAssistantAgent
 from .base import BaseTeamAgent
 from .builder import BuilderAgent
 from .reviewer import ReviewerAgent
@@ -39,6 +40,7 @@ AGENT_METADATA = {
     BusinessAnalystAgent.key: BusinessAnalystAgent.metadata(),
     BuilderAgent.key: BuilderAgent.metadata(),
     ReviewerAgent.key: ReviewerAgent.metadata(),
+    CEOAssistantAgent.key: CEOAssistantAgent.metadata(),
 }
 
 _workflow_cache = None
@@ -89,12 +91,19 @@ async def get_or_create_agents():
         instructions=ReviewerAgent.build_instructions(TEAM_MISSION) + decision_instructions,
     )
 
+    # CEO Assistant never passes - always available to help
+    assistant_agent = client.create_agent(
+        name="CEOAssistantAgent",
+        instructions=CEOAssistantAgent.build_instructions(TEAM_MISSION),
+    )
+
     _agents_cache = {
         "strategy": strategy_agent,
         "architect": architect_agent,
         "analyst": analyst_agent,
         "builder": builder_agent,
         "reviewer": reviewer_agent,
+        "assistant": assistant_agent,
     }
 
     return _agents_cache
@@ -171,6 +180,7 @@ __all__ = [
     "BusinessAnalystAgent",
     "BuilderAgent",
     "ReviewerAgent",
+    "CEOAssistantAgent",
     "get_or_create_workflow",
     "get_or_create_agents",
     "TEAM_MISSION",

@@ -14,7 +14,7 @@ from agent_framework import (
 )
 
 from vanda_team import config as _config  # Loads .env
-from vanda_team.agents import AGENT_METADATA, TEAM_MISSION, get_or_create_agents
+from vanda_team.agents import AGENT_METADATA, TEAM_MISSION, get_or_create_agents, get_or_create_workflow
 
 
 class BusinessTeamAgent(Executor):
@@ -104,7 +104,7 @@ async def main():
                     else:
                         chat_messages.append(msg)
 
-                # If specific agents were requested, use them; otherwise, broadcast to all
+                # If specific agents were requested, use them; otherwise, broadcast to specialist agents
                 if requested_agents and isinstance(requested_agents, list) and len(requested_agents) > 0:
                     # Use requested agents
                     selected_agents = [a for a in requested_agents if a in agents]
@@ -112,12 +112,13 @@ async def main():
                     print(f"[DEBUG] Available agents: {list(agents.keys())}")
                     print(f"[DEBUG] Selected agents: {selected_agents}")
                     if not selected_agents:
-                        selected_agents = list(agents.keys())
-                        print(f"[DEBUG] No valid agents found, broadcasting to all")
+                        # Broadcast to specialists (excluding assistant)
+                        selected_agents = [k for k in agents.keys() if k != "assistant"]
+                        print(f"[DEBUG] No valid agents found, broadcasting to specialists")
                 else:
-                    # Broadcast to all agents - they'll decide if they should respond
-                    selected_agents = list(agents.keys())
-                    print(f"[DEBUG] Broadcasting to all agents: {selected_agents}")
+                    # Broadcast to specialist agents only (assistant is fallback)
+                    selected_agents = [k for k in agents.keys() if k != "assistant"]
+                    print(f"[DEBUG] Broadcasting to specialist agents: {selected_agents}")
 
                 # Run all selected agents in parallel
                 import asyncio
@@ -158,14 +159,11 @@ async def main():
                     if r.get("output", "").strip().upper() != "PASS"
                 ]
                 
-                # If no agents responded, return a helpful message
+                # If no specialists responded, ask the CEO assistant (fallback)
                 if not active_results:
-                    return JSONResponse({
-                        "output": "No agents felt this question was in their area of expertise. Please try rephrasing or being more specific.",
-                        "agent": "system",
-                        "agent_label": "System",
-                        "status": "no_response"
-                    })
+                    print("[DEBUG] All specialists passed, asking CEO assistant")
+                    assistant_result = await run_agent("assistant")
+                    active_results = [assistant_result]
                 
                 # Return single or multiple responses
                 if len(active_results) == 1:

@@ -96,7 +96,7 @@ def main():
     print("=" * 60)
     print()
     
-    # Open browser (with graceful fallback if not available)
+    # Try to open browser (may fail silently on headless systems)
     try:
         webbrowser.open("http://127.0.0.1:8088/")
     except Exception:
