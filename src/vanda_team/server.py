@@ -191,6 +191,20 @@ async def main():
         async def health_handler(request):
             return JSONResponse({"status": "ok"})
 
+        async def agents_handler(request):
+            """Return list of available agents."""
+            agents_list = [
+                {
+                    "key": meta["key"],
+                    "name": meta["name"],
+                    "role": meta["role"],
+                    "avatar": meta["avatar_url"],
+                    "description": meta.get("description", "")
+                }
+                for meta in AGENT_METADATA.values()
+            ]
+            return JSONResponse({"agents": agents_list})
+
         async def ui_handler(request):
             if ui_file.exists():
                 return FileResponse(ui_file)
@@ -201,6 +215,7 @@ async def main():
                 Route("/", ui_handler, methods=["GET"]),
                 Route("/web_ui.html", ui_handler, methods=["GET"]),
                 Route("/health", health_handler, methods=["GET"]),
+                Route("/agents", agents_handler, methods=["GET"]),
                 Route("/chat", chat_handler, methods=["POST", "OPTIONS"]),
                 Route("/run", chat_handler, methods=["POST", "OPTIONS"]),
             ]

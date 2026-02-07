@@ -551,6 +551,7 @@
     <script>
         const ENDPOINT = "/chat";
         const HEALTH_ENDPOINT = "/health";
+        const AGENTS_ENDPOINT = "/agents";
         const chatArea = document.getElementById("chatArea");
         const questionInput = document.getElementById("questionInput");
         const sendBtn = document.getElementById("sendBtn");
@@ -558,23 +559,40 @@
         const agentSuggestions = document.getElementById("agentSuggestions");
         const selectedAgentsDiv = document.getElementById("selectedAgents");
         
-        // Agent list with metadata
-        const AGENTS = [
-            { key: "strategy", name: "Claire", role: "Strategy Lead", avatar: "https://i.pravatar.cc/64?img=47" },
-            { key: "architect", name: "Marc", role: "Technical Architect", avatar: "https://i.pravatar.cc/64?img=12" },
-            { key: "analyst", name: "Sophie", role: "Business Analyst", avatar: "https://i.pravatar.cc/64?img=48" },
-            { key: "builder", name: "Hugo", role: "Lead Engineer", avatar: "https://i.pravatar.cc/64?img=13" },
-            { key: "reviewer", name: "Nina", role: "Quality Reviewer", avatar: "https://i.pravatar.cc/64?img=49" },
-            { key: "assistant", name: "Emma", role: "Executive Assistant", avatar: "https://i.pravatar.cc/64?img=45" },
-        ];
+        // Agent list - will be loaded dynamically from backend
+        let AGENTS = [];
         
         let selectedAgents = [];
         let currentMention = "";
         let mentionStartIndex = -1;
         
+        // Load agents from backend
+        async function loadAgents() {
+            try {
+                const response = await fetch(AGENTS_ENDPOINT);
+                if (response.ok) {
+                    const data = await response.json();
+                    AGENTS = data.agents || [];
+                    renderTeamList();
+                    console.log("[+] Loaded agents:", AGENTS);
+                } else {
+                    console.error("[!] Failed to load agents");
+                    // Fallback to empty array
+                    AGENTS = [];
+                }
+            } catch (error) {
+                console.error("[!] Error loading agents:", error);
+                AGENTS = [];
+            }
+        }
+        
         // Render team list in sidebar
         function renderTeamList() {
             const teamList = document.getElementById("teamList");
+            if (AGENTS.length === 0) {
+                teamList.innerHTML = '<p style="color: #94a3b8; padding: 16px;">Loading team...</p>';
+                return;
+            }
             teamList.innerHTML = AGENTS.map(agent => `
                 <div class="agent-item" onclick="selectAgent('${agent.key}', '${agent.name}', '${agent.avatar}')">
                     <img class="agent-item-avatar" src="${agent.avatar}" alt="${agent.name}" />
@@ -586,9 +604,9 @@
             `).join("");
         }
         
-        // Check connection on load
+        // Initialize on load
+        loadAgents();
         checkConnection();
-        renderTeamList();
         
         async function checkConnection() {
             try {
