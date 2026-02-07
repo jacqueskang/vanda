@@ -104,23 +104,16 @@ async def main():
                     else:
                         chat_messages.append(msg)
 
-                # If specific agents were requested, use them; otherwise, broadcast to specialist agents
+                # If specific agents were requested, use them; otherwise, start with CEO assistant
                 if requested_agents and isinstance(requested_agents, list) and len(requested_agents) > 0:
-                    # Use requested agents
+                    # User explicitly selected agents
                     selected_agents = [a for a in requested_agents if a in agents]
                     print(f"[DEBUG] Requested agents: {requested_agents}")
-                    print(f"[DEBUG] Available agents: {list(agents.keys())}")
-                    print(f"[DEBUG] Selected agents: {selected_agents}")
-                    if not selected_agents:
-                        # Broadcast to specialists (excluding assistant)
-                        selected_agents = [k for k in agents.keys() if k != "assistant"]
-                        print(f"[DEBUG] No valid agents found, broadcasting to specialists")
                 else:
-                    # Broadcast to specialist agents only (assistant is fallback)
-                    selected_agents = [k for k in agents.keys() if k != "assistant"]
-                    print(f"[DEBUG] Broadcasting to specialist agents: {selected_agents}")
+                    # No agents selected - assistant responds first
+                    selected_agents = ["assistant"]
+                    print(f"[DEBUG] No agents selected, starting with CEO assistant")
 
-                # Run all selected agents in parallel
                 import asyncio
                 
                 async def run_agent(agent_key):
@@ -150,20 +143,82 @@ async def main():
                         "status": "complete",
                     }
                 
-                # Run all agents in parallel
-                results = await asyncio.gather(*[run_agent(agent_key) for agent_key in selected_agents])
-                
-                # Filter out agents that chose not to respond (returned "PASS")
-                active_results = [
-                    r for r in results 
-                    if r.get("output", "").strip().upper() != "PASS"
-                ]
-                
-                # If no specialists responded, ask the CEO assistant (fallback)
-                if not active_results:
-                    print("[DEBUG] All specialists passed, asking CEO assistant")
+                # Run selected agents
+                if "assistant" in selected_agents and len(selected_agents) == 1:
+                    # Assistant responds first
+                    print("[DEBUG] Assistant responding first...")
                     assistant_result = await run_agent("assistant")
                     active_results = [assistant_result]
+                    
+                    # Check if assistant mentioned other agents
+                    assistant_text = assistant_result.get("output", "")
+                    mentioned_agents = []
+                    
+                    # Agent name mapping
+                    name_to_key = {
+                        "claire": "strategy",
+                        "marc": "architect", 
+                        "sophie": "analyst",
+                        "hugo": "builder",
+                        "nina": "reviewer"
+                    }
+                    
+                    # Parse for @mentions
+                    import re
+                    mentions = re.findall(r'@(\w+)', assistant_text, re.IGNORECASE)
+                    for mention in mentions:
+                        agent_key = name_to_key.get(mention.lower())
+                        if agent_key and agent_key not in mentioned_agents:
+                            mentioned_agents.append(agent_key)
+                    
+                    # If assistant mentioned other agents, run them too
+                    if mentioned_agents:
+                        print(f"[DEBUG] Assistant mentioned agents: {mentioned_agents}")
+                        # Add assistant's response to chat history for context
+                        assistant_msg = ChatMessage(role=Role.ASSISTANT, text=assistant_text)
+                        extended_messages = chat_messages + [assistant_msg]
+                        
+                        async def run_mentioned_agent(agent_key):
+                            mission_message = ChatMessage(role=Role.SYSTEM, text=TEAM_MISSION)
+                            response = await agents[agent_key].run([mission_message] + extended_messages)
+                            
+                            response_text = ""
+                            if hasattr(response, "messages") and response.messages:
+                                for msg in response.messages:
+                                    if hasattr(msg, "text") and msg.text:
+                                        response_text += msg.text + " "
+                            
+                            estimated_tokens = max(1, len(response_text.strip()) // 4) if response_text else 0
+                            metadata = AGENT_METADATA.get(agent_key, {})
+                            label = agent_key
+                            if metadata:
+                                label = f"{metadata.get('name', agent_key)} ({metadata.get('role', agent_key)})"
+                            
+                            return {
+                                "output": response_text.strip() or "Request processed",
+                                "agent": agent_key,
+                                "agent_label": label,
+                                "agent_meta": metadata,
+                                "agent_avatar": metadata.get("avatar_url"),
+                                "tokens_estimated": estimated_tokens,
+                                "status": "complete",
+                            }
+                        
+                        specialist_results = await asyncio.gather(*[run_mentioned_agent(key) for key in mentioned_agents])
+                        
+                        # Filter out PASS responses
+                        for result in specialist_results:
+                            if result.get("output", "").strip().upper() != "PASS":
+                                active_results.append(result)
+                else:
+                    # User explicitly selected specific agents
+                    results = await asyncio.gather(*[run_agent(agent_key) for agent_key in selected_agents])
+                    
+                    # Filter out agents that chose not to respond (returned "PASS")
+                    active_results = [
+                        r for r in results 
+                        if r.get("output", "").strip().upper() != "PASS"
+                    ]
                 
                 # Return single or multiple responses
                 if len(active_results) == 1:

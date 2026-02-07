@@ -58,37 +58,37 @@ async def get_or_create_agents():
     client = await get_model_client()
     _client_cache = client
 
-    # Decision-making instructions for all agents
-    decision_instructions = (
-        "\n\nIMPORTANT: You receive all team messages. Evaluate if this request is relevant to YOUR expertise and role. "
-        "If the question is clearly outside your scope or better suited for another team member, respond with exactly: 'PASS'\n"
-        "If it's relevant to you, provide a helpful response focused on your area of expertise."
+    # Specialist agents only respond when explicitly mentioned
+    specialist_instructions = (
+        "\n\nIMPORTANT: You should ONLY respond if you are explicitly mentioned by name in the message. "
+        "If you are not mentioned, respond with exactly: 'PASS'\n"
+        "When you ARE mentioned, provide a helpful, focused response in your area of expertise."
     )
 
     strategy_agent = client.create_agent(
         name="StrategyAgent",
-        instructions=StrategyAgent.build_instructions_with_tools(TEAM_MISSION) + decision_instructions,
+        instructions=StrategyAgent.build_instructions_with_tools(TEAM_MISSION) + specialist_instructions,
         tools=[strategy_web_search, strategy_wikipedia_lookup, strategy_fetch_url],
     )
 
     architect_agent = client.create_agent(
         name="TechnicalArchitectAgent",
-        instructions=TechnicalArchitectAgent.build_instructions(TEAM_MISSION) + decision_instructions,
+        instructions=TechnicalArchitectAgent.build_instructions(TEAM_MISSION) + specialist_instructions,
     )
 
     analyst_agent = client.create_agent(
         name="BusinessAnalystAgent",
-        instructions=BusinessAnalystAgent.build_instructions(TEAM_MISSION) + decision_instructions,
+        instructions=BusinessAnalystAgent.build_instructions(TEAM_MISSION) + specialist_instructions,
     )
 
     builder_agent = client.create_agent(
         name="BuilderAgent",
-        instructions=BuilderAgent.build_instructions(TEAM_MISSION) + decision_instructions,
+        instructions=BuilderAgent.build_instructions(TEAM_MISSION) + specialist_instructions,
     )
 
     reviewer_agent = client.create_agent(
         name="ReviewerAgent",
-        instructions=ReviewerAgent.build_instructions(TEAM_MISSION) + decision_instructions,
+        instructions=ReviewerAgent.build_instructions(TEAM_MISSION) + specialist_instructions,
     )
 
     # CEO Assistant never passes - always available to help
