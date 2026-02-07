@@ -92,18 +92,14 @@ class BaseTeamAgent(Executor):
     async def create_agent(
         cls,
         default_client: ChatAgent,
-        client_cache: dict | None = None,
     ) -> ChatAgent:
         """Create an agent instance with optional custom model."""
-        if client_cache is None:
-            client_cache = {}
-        
         # Get the right client based on model_name
         model_name = cls.model_name.strip() if cls.model_name else ""
-        if model_name and model_name not in client_cache:
-            client_cache[model_name] = await get_model_client(model_name)
-        
-        client = client_cache.get(model_name, default_client) if model_name else default_client
+        if model_name:
+            client = await get_model_client(model_name)
+        else:
+            client = default_client
         
         # Build instructions
         if cls.tools:

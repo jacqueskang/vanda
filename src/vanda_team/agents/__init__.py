@@ -44,31 +44,25 @@ async def get_or_create_agents():
         return _agents_cache
 
     client = await get_model_client()
-    client_cache: dict[str, object] = {}
 
     strategy_agent = await StrategyAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     architect_agent = await TechnicalArchitectAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     analyst_agent = await BusinessAnalystAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     builder_agent = await BuilderAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     reviewer_agent = await ReviewerAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     # CEO Assistant never passes - always available to help
@@ -76,7 +70,6 @@ async def get_or_create_agents():
     CEOAssistantAgent.model_name = assistant_model_name
     assistant_agent = await CEOAssistantAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     _agents_cache = {
@@ -101,33 +94,27 @@ async def get_or_create_workflow():
     print("[*] Initializing AI agent team...")
 
     client = await get_model_client()
-    client_cache: dict[str, object] = {}
 
     print("[*] Creating specialized agents...")
 
     strategy_agent = await StrategyAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     architect_agent = await TechnicalArchitectAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     analyst_agent = await BusinessAnalystAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     builder_agent = await BuilderAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     reviewer_agent = await ReviewerAgent.create_agent(
         client,
-        client_cache=client_cache,
     )
 
     print("[-] Building multi-agent workflow...")
