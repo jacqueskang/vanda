@@ -874,15 +874,11 @@
                 const avatarUrl = result.agent_avatar
                     ? String(result.agent_avatar)
                     : (result.agent_meta && result.agent_meta.avatar_url ? String(result.agent_meta.avatar_url) : "");
-                const tokenCount = Number.isFinite(result.tokens_estimated) ? result.tokens_estimated : null;
                 if (agentName) {
                     const avatarHtml = avatarUrl
                         ? `<img class="agent-avatar" src="${avatarUrl}" alt="${agentName}" />`
                         : "";
                     headerLine = `<div class="agent-header">${avatarHtml}<span>${agentName}</span></div>`;
-                }
-                if (tokenCount !== null) {
-                    footerLine = `\n[Tokens: ${tokenCount}]`;
                 }
             }
 
