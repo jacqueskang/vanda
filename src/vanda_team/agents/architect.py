@@ -2,10 +2,10 @@
 
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
-from vanda_team.agents.base import BaseTeamAgent
+from vanda_team.agents.specialist import BaseSpecialistAgent
 
 
-class TechnicalArchitectAgent(BaseTeamAgent):
+class TechnicalArchitectAgent(BaseSpecialistAgent):
     """Technical Architect Agent: system design and stack."""
 
     key = "architect"

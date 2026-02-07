@@ -8,9 +8,6 @@ from vanda_team.agents.base import BaseTeamAgent
 
 
 class CEOAssistantAgent(BaseTeamAgent):
-    """CEO Assistant Agent: supportive personal assistant to the CEO."""
-    
-    is_specialist = False  # CEO Assistant always responds, not just when mentioned
 
     key = "assistant"
     name = "Emma"
@@ -41,6 +38,29 @@ class CEOAssistantAgent(BaseTeamAgent):
 
     def __init__(self, agent: ChatAgent, id: str = "assistant"):
         super().__init__(agent=agent, id=id)
+
+    def should_respond(self, messages):
+        """CEO Assistant responds if mentioned or if no specialists are mentioned."""
+        import re
+        # First, check if this agent is explicitly mentioned
+        for msg in messages:
+            if hasattr(msg, 'text'):
+                mentions = re.findall(r'@(\w+)', msg.text, re.IGNORECASE)
+                for mention in mentions:
+                    if mention.lower() == self.name.lower():
+                        return True
+        
+        # Also respond if no specialists are mentioned
+        for msg in messages:
+            if hasattr(msg, 'text'):
+                mentions = re.findall(r'@(\w+)', msg.text, re.IGNORECASE)
+                for mention in mentions:
+                    # Check if any known specialist name is mentioned
+                    if mention.lower() in {
+                        "claire", "marc", "sophie", "hugo", "nina"
+                    }:
+                        return False
+        return True
 
     @handler
     async def handle_business_inquiry(

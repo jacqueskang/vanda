@@ -2,7 +2,7 @@
 
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
-from vanda_team.agents.base import BaseTeamAgent
+from vanda_team.agents.specialist import BaseSpecialistAgent
 from vanda_team.tools_strategy import (
     strategy_fetch_url,
     strategy_web_search,
@@ -10,7 +10,7 @@ from vanda_team.tools_strategy import (
 )
 
 
-class StrategyAgent(BaseTeamAgent):
+class StrategyAgent(BaseSpecialistAgent):
     """Strategy Agent: market analysis and business strategy."""
 
     key = "strategy"

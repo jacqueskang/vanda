@@ -4,10 +4,10 @@ from typing import Never
 
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
-from vanda_team.agents.base import BaseTeamAgent
+from vanda_team.agents.specialist import BaseSpecialistAgent
 
 
-class ReviewerAgent(BaseTeamAgent):
+class ReviewerAgent(BaseSpecialistAgent):
     """Reviewer Agent: quality and final summary."""
 
     key = "reviewer"

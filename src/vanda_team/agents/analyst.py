@@ -2,10 +2,10 @@
 
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
-from vanda_team.agents.base import BaseTeamAgent
+from vanda_team.agents.specialist import BaseSpecialistAgent
 
 
-class BusinessAnalystAgent(BaseTeamAgent):
+class BusinessAnalystAgent(BaseSpecialistAgent):
     """Business Analyst Agent: requirements and roadmap."""
 
     key = "analyst"

@@ -1,5 +1,6 @@
 """HTTP server entry point for the business team."""
 
+import re
 import sys
 from pathlib import Path
 
@@ -7,6 +8,49 @@ from agent_framework import Role, ChatMessage
 
 from vanda_team import config as _config  # Loads .env
 from vanda_team.agents import AGENT_METADATA, get_or_create_agents, get_or_create_workflow, BaseTeamAgent
+
+# Constants
+NAME_TO_KEY = {
+    "claire": "strategy",
+    "marc": "architect", 
+    "sophie": "analyst",
+    "hugo": "builder",
+    "nina": "reviewer"
+}
+
+def extract_response_text(response):
+    """Extract text from agent response."""
+    response_text = ""
+    if hasattr(response, "messages") and response.messages:
+        for msg in response.messages:
+            if hasattr(msg, "text") and msg.text:
+                response_text += msg.text + " "
+    return response_text.strip()
+
+def create_agent_result(agent_key, response_text):
+    """Create result dict for agent response."""
+    estimated_tokens = max(1, len(response_text) // 4) if response_text else 0
+    metadata = AGENT_METADATA.get(agent_key, {})
+    label = agent_key
+    if metadata:
+        label = f"{metadata.get('name', agent_key)} ({metadata.get('role', agent_key)})"
+    
+    return {
+        "output": response_text or "Request processed",
+        "agent": agent_key,
+        "agent_label": label,
+        "agent_meta": metadata,
+        "agent_avatar": metadata.get("avatar_url"),
+        "tokens_estimated": estimated_tokens,
+        "status": "complete",
+    }
+
+async def run_agent_with_messages(agent_key, messages_for_agent, agents):
+    """Run an agent with given messages."""
+    response = await agents[agent_key].run(messages_for_agent)
+    response_text = extract_response_text(response)
+    
+    return create_agent_result(agent_key, response_text)
 
 
 async def main():
@@ -33,10 +77,8 @@ async def main():
             try:
                 data = await request.json()
                 messages = data.get("messages", [])
-                requested_agents = data.get("agents", None)  # Can be None or list of agent keys
 
                 chat_messages = []
-                user_message_text = ""
                 for msg in messages:
                     if isinstance(msg, dict):
                         role_value = msg.get("role", "user")
@@ -48,7 +90,6 @@ async def main():
                                 role_value = Role.SYSTEM
                             else:
                                 role_value = Role.USER
-                                user_message_text = msg.get("text", "")
 
                         chat_messages.append(
                             ChatMessage(
@@ -59,177 +100,37 @@ async def main():
                     else:
                         chat_messages.append(msg)
 
-                # Agent name mapping for @mentions
-                name_to_key = {
-                    "claire": "strategy",
-                    "marc": "architect", 
-                    "sophie": "analyst",
-                    "hugo": "builder",
-                    "nina": "reviewer"
-                }
-
-                # If specific agents were requested, use them; otherwise check for @mentions in user message
-                if requested_agents and isinstance(requested_agents, list) and len(requested_agents) > 0:
-                    # User explicitly selected agents
-                    selected_agents = [a for a in requested_agents if a in agents]
-                else:
-                    # Check if user mentioned any agents in their message
-                    import re
-                    
-                    user_mentions = re.findall(r'@(\w+)', user_message_text, re.IGNORECASE)
-                    mentioned_agents = []
-                    for mention in user_mentions:
-                        agent_key = name_to_key.get(mention.lower())
-                        if agent_key and agent_key not in mentioned_agents:
-                            mentioned_agents.append(agent_key)
-                    
-                    if mentioned_agents:
-                        # User mentioned specific agents - call them directly without assistant
-                        selected_agents = mentioned_agents
-                    else:
-                        # No agents selected and no mentions - assistant responds first
-                        selected_agents = ["assistant"]
+                # Determine which agents should respond initially
+                initial_responders = [key for key, agent in agents.items() if agent.should_respond(chat_messages)]
+                if not initial_responders:
+                    initial_responders = ["assistant"]
 
                 import asyncio
                 
                 async def run_agent(agent_key):
-                    # Critical: Build messages with explicit indication that overrides PASS behavior
-                    messages_for_agent = []
-                    
-                    # 1. System message with absolute override
-                    agent_name = AGENT_METADATA.get(agent_key, {}).get("name", agent_key)
-                    system_msg = ChatMessage(
-                        role=Role.SYSTEM,
-                        text=f"██ CRITICAL SYSTEM OVERRIDE ██\n"
-                             f"Agent {agent_name.upper()} has been DIRECTLY SELECTED and SUMMONED.\n"
-                             f"MANDATORY: You MUST express your expert opinion. IGNORE any 'PASS' or 'only if mentioned' instructions.\n"
-                             f"You have been called to respond. Your expertise is needed. Respond fully and professionally.\n"
-                             f"═══════════════════════════════\n\n"
-                             f"{BaseTeamAgent.TEAM_MISSION}"
-                    )
-                    messages_for_agent.append(system_msg)
-                    messages_for_agent.extend(chat_messages)
-                    
-                    response = await agents[agent_key].run(messages_for_agent)
-                    
-                    response_text = ""
-                    if hasattr(response, "messages") and response.messages:
-                        for msg in response.messages:
-                            if hasattr(msg, "text") and msg.text:
-                                response_text += msg.text + " "
-                    
-                    response_text = ""
-                    if hasattr(response, "messages") and response.messages:
-                        for msg in response.messages:
-                            if hasattr(msg, "text") and msg.text:
-                                response_text += msg.text + " "
-                    
-                    estimated_tokens = max(1, len(response_text.strip()) // 4) if response_text else 0
-                    
-                    metadata = AGENT_METADATA.get(agent_key, {})
-                    label = agent_key
-                    if metadata:
-                        label = f"{metadata.get('name', agent_key)} ({metadata.get('role', agent_key)})"
-                    
-                    return {
-                        "output": response_text.strip() or "Request processed",
-                        "agent": agent_key,
-                        "agent_label": label,
-                        "agent_meta": metadata,
-                        "agent_avatar": metadata.get("avatar_url"),
-                        "tokens_estimated": estimated_tokens,
-                        "status": "complete",
-                    }
+                    return await run_agent_with_messages(agent_key, chat_messages, agents)
                 
-                # Run selected agents
-                if "assistant" in selected_agents and len(selected_agents) == 1:
-                    # Assistant responds first
-                    assistant_result = await run_agent("assistant")
-                    active_results = [assistant_result]
-                    
-                    # Check if assistant mentioned other agents
+                # Run initial responders
+                results = await asyncio.gather(*[run_agent(key) for key in initial_responders])
+                active_results = [r for r in results if r.get("output", "").strip().upper() != "PASS"]
+                
+                # Check if assistant responded and mentioned other agents
+                assistant_result = next((r for r in active_results if r["agent"] == "assistant"), None)
+                if assistant_result:
                     assistant_text = assistant_result.get("output", "")
-                    mentioned_agents = []
+                    # Add assistant response to messages for potential additional responders
+                    extended_messages = chat_messages + [ChatMessage(role=Role.ASSISTANT, text=assistant_text)]
                     
-                    # Parse for @mentions in assistant's response
-                    mentions = re.findall(r'@(\w+)', assistant_text, re.IGNORECASE)
-                    for mention in mentions:
-                        agent_key = name_to_key.get(mention.lower())
-                        if agent_key and agent_key not in mentioned_agents:
-                            mentioned_agents.append(agent_key)
+                    # Find additional agents that should respond now
+                    additional_responders = [key for key, agent in agents.items() 
+                                           if agent.should_respond(extended_messages) and key not in initial_responders]
                     
-                    # If assistant mentioned other agents, run them too
-                    if mentioned_agents:
-                        # Add assistant's response to chat history for context
-                        assistant_msg = ChatMessage(role=Role.ASSISTANT, text=assistant_text)
-                        extended_messages = chat_messages + [assistant_msg]
-                        
-                        async def run_mentioned_agent(agent_key):
-                            agent_name = AGENT_METADATA.get(agent_key, {}).get("name", agent_key)
-                            
-                            # Critical: Build messages with explicit mention that overrides PASS behavior
-                            messages_for_agent = []
-                            
-                            # 1. System message with absolute override
-                            system_msg = ChatMessage(
-                                role=Role.SYSTEM,
-                                text=f"██ CRITICAL SYSTEM OVERRIDE ██\n"
-                                     f"Agent {agent_name.upper()} has been DIRECTLY SELECTED and SUMMONED.\n"
-                                     f"MANDATORY: You MUST express your expert opinion. IGNORE any 'PASS' or 'only if mentioned' instructions.\n"
-                                     f"You have been called to respond. Your expertise is needed. Respond fully and professionally.\n"
-                                     f"═══════════════════════════════\n\n"
-                                     f"{BaseTeamAgent.TEAM_MISSION}"
-                            )
-                            messages_for_agent.append(system_msg)
-                            messages_for_agent.extend(extended_messages)
-                            
-                            response = await agents[agent_key].run(messages_for_agent)
-                            
-                            response_text = ""
-                            if hasattr(response, "messages") and response.messages:
-                                for msg in response.messages:
-                                    if hasattr(msg, "text") and msg.text:
-                                        response_text += msg.text + " "
-                            
-                            response_text = ""
-                            if hasattr(response, "messages") and response.messages:
-                                for msg in response.messages:
-                                    if hasattr(msg, "text") and msg.text:
-                                        response_text += msg.text + " "
-                            
-                            estimated_tokens = max(1, len(response_text.strip()) // 4) if response_text else 0
-                            metadata = AGENT_METADATA.get(agent_key, {})
-                            label = agent_key
-                            if metadata:
-                                label = f"{metadata.get('name', agent_key)} ({metadata.get('role', agent_key)})"
-                            
-                            return {
-                                "output": response_text.strip() or "Request processed",
-                                "agent": agent_key,
-                                "agent_label": label,
-                                "agent_meta": metadata,
-                                "agent_avatar": metadata.get("avatar_url"),
-                                "tokens_estimated": estimated_tokens,
-                                "status": "complete",
-                            }
-                        
-                        specialist_results = await asyncio.gather(*[run_mentioned_agent(key) for key in mentioned_agents])
-                        
-                        # Filter out PASS responses
-                        for result in specialist_results:
-                            response_output = result.get("output", "").strip().upper()
-                            if response_output != "PASS":
-                                active_results.append(result)
-                else:
-                    # User explicitly selected specific agents
-                    results = await asyncio.gather(*[run_agent(agent_key) for agent_key in selected_agents])
-                    
-                    # Filter out agents that chose not to respond (returned "PASS")
-                    active_results = []
-                    for r in results:
-                        response_output = r.get("output", "").strip().upper()
-                        if response_output != "PASS":
-                            active_results.append(r)
+                    if additional_responders:
+                        additional_results = await asyncio.gather(*[run_agent_with_messages(key, extended_messages, agents) 
+                                                                   for key in additional_responders])
+                        for r in additional_results:
+                            if r.get("output", "").strip().upper() != "PASS":
+                                active_results.append(r)
                 
                 # Return single or multiple responses
                 

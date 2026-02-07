@@ -1,10 +1,12 @@
 """Base team agent class with shared properties and methods."""
 
+import abc
+import re
 from agent_framework import ChatAgent, Executor
 from vanda_team.model_client import get_model_client
 
 
-class BaseTeamAgent(Executor):
+class BaseTeamAgent(Executor, abc.ABC):
     """Base agent with shared metadata."""
 
     # Team mission (shared across all agents)
@@ -25,20 +27,17 @@ class BaseTeamAgent(Executor):
     personality: str = ""
     focus_areas: list[str] = []
     role_description: str = ""  # Override in subclasses for specific role instructions
-    is_specialist: bool = True  # Override to False for non-specialist agents (e.g., CEO Assistant)
-    
-    # Specialist agents only respond when explicitly mentioned
-    specialist_instructions: str = (
-        "\n\nIMPORTANT: You should ONLY respond if you are explicitly mentioned by name in the message. "
-        "If you are not mentioned, respond with exactly: 'PASS'\n"
-        "When you ARE mentioned, provide a helpful, focused response in your area of expertise."
-    )
     
     agent: ChatAgent
 
     def __init__(self, agent: ChatAgent, id: str):
         self.agent = agent
         super().__init__(id=id)
+
+    @abc.abstractmethod
+    def should_respond(self, messages):
+        """Determine if this agent should respond based on message content."""
+        pass
 
     @classmethod
     def metadata(cls) -> dict:
@@ -108,10 +107,6 @@ class BaseTeamAgent(Executor):
             instructions = cls.build_instructions_with_tools()
         else:
             instructions = cls.build_instructions()
-        
-        # Apply specialist instructions if this is a specialist agent
-        if cls.is_specialist:
-            instructions += cls.specialist_instructions
         
         # Create agent
         if cls.tools:
