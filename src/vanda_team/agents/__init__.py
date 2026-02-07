@@ -23,13 +23,6 @@ from .reviewer import ReviewerAgent
 from .strategy import StrategyAgent
 
 
-TEAM_MISSION = (
-    "Mission: Build a profitable platform where AI agents can hire and manage human services. "
-    "Short-term market focus: France. Long-term market focus: worldwide. "
-    "Maximize revenue and sustainable unit economics. All guidance should align to this objective. "
-    "Be brief and focus only on the most important points."
-)
-
 AGENT_METADATA = {
     StrategyAgent.key: StrategyAgent.metadata(),
     TechnicalArchitectAgent.key: TechnicalArchitectAgent.metadata(),
@@ -55,45 +48,28 @@ async def get_or_create_agents():
     _client_cache = client
     client_cache: dict[str, object] = {}
 
-    # Specialist agents only respond when explicitly mentioned
-    specialist_instructions = (
-        "\n\nIMPORTANT: You should ONLY respond if you are explicitly mentioned by name in the message. "
-        "If you are not mentioned, respond with exactly: 'PASS'\n"
-        "When you ARE mentioned, provide a helpful, focused response in your area of expertise."
-    )
-
     strategy_agent = await StrategyAgent.create_agent(
         client,
-        TEAM_MISSION,
-        instruction_suffix=specialist_instructions,
         client_cache=client_cache,
     )
 
     architect_agent = await TechnicalArchitectAgent.create_agent(
         client,
-        TEAM_MISSION,
-        instruction_suffix=specialist_instructions,
         client_cache=client_cache,
     )
 
     analyst_agent = await BusinessAnalystAgent.create_agent(
         client,
-        TEAM_MISSION,
-        instruction_suffix=specialist_instructions,
         client_cache=client_cache,
     )
 
     builder_agent = await BuilderAgent.create_agent(
         client,
-        TEAM_MISSION,
-        instruction_suffix=specialist_instructions,
         client_cache=client_cache,
     )
 
     reviewer_agent = await ReviewerAgent.create_agent(
         client,
-        TEAM_MISSION,
-        instruction_suffix=specialist_instructions,
         client_cache=client_cache,
     )
 
@@ -102,7 +78,6 @@ async def get_or_create_agents():
     CEOAssistantAgent.model_name = assistant_model_name
     assistant_agent = await CEOAssistantAgent.create_agent(
         client,
-        TEAM_MISSION,
         client_cache=client_cache,
     )
 
@@ -135,31 +110,26 @@ async def get_or_create_workflow():
 
     strategy_agent = await StrategyAgent.create_agent(
         client,
-        TEAM_MISSION,
         client_cache=client_cache,
     )
 
     architect_agent = await TechnicalArchitectAgent.create_agent(
         client,
-        TEAM_MISSION,
         client_cache=client_cache,
     )
 
     analyst_agent = await BusinessAnalystAgent.create_agent(
         client,
-        TEAM_MISSION,
         client_cache=client_cache,
     )
 
     builder_agent = await BuilderAgent.create_agent(
         client,
-        TEAM_MISSION,
         client_cache=client_cache,
     )
 
     reviewer_agent = await ReviewerAgent.create_agent(
         client,
-        TEAM_MISSION,
         client_cache=client_cache,
     )
 
@@ -197,6 +167,5 @@ __all__ = [
     "CEOAssistantAgent",
     "get_or_create_workflow",
     "get_or_create_agents",
-    "TEAM_MISSION",
     "AGENT_METADATA",
 ]

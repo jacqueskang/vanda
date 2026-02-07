@@ -7,6 +7,8 @@ from vanda_team.agents.base import BaseTeamAgent
 
 class CEOAssistantAgent(BaseTeamAgent):
     """CEO Assistant Agent: supportive personal assistant to the CEO."""
+    
+    is_specialist = False  # CEO Assistant always responds, not just when mentioned
 
     key = "assistant"
     name = "Emma"

@@ -7,6 +7,14 @@ from vanda_team.model_client import get_model_client
 class BaseTeamAgent(Executor):
     """Base agent with shared metadata."""
 
+    # Team mission (shared across all agents)
+    TEAM_MISSION: str = (
+        "Mission: Build a profitable platform where AI agents can hire and manage human services. "
+        "Short-term market focus: France. Long-term market focus: worldwide. "
+        "Maximize revenue and sustainable unit economics. All guidance should align to this objective. "
+        "Be brief and focus only on the most important points."
+    )
+
     key: str = ""
     name: str = ""
     gender: str = ""
@@ -17,6 +25,15 @@ class BaseTeamAgent(Executor):
     personality: str = ""
     focus_areas: list[str] = []
     role_description: str = ""  # Override in subclasses for specific role instructions
+    is_specialist: bool = True  # Override to False for non-specialist agents (e.g., CEO Assistant)
+    
+    # Specialist agents only respond when explicitly mentioned
+    specialist_instructions: str = (
+        "\n\nIMPORTANT: You should ONLY respond if you are explicitly mentioned by name in the message. "
+        "If you are not mentioned, respond with exactly: 'PASS'\n"
+        "When you ARE mentioned, provide a helpful, focused response in your area of expertise."
+    )
+    
     agent: ChatAgent
 
     def __init__(self, agent: ChatAgent, id: str):
@@ -35,11 +52,11 @@ class BaseTeamAgent(Executor):
         }
 
     @classmethod
-    def build_instructions(cls, mission: str, tools_info: str = "") -> str:
+    def build_instructions(cls, tools_info: str = "") -> str:
         """Build instructions dynamically from class properties."""
         focus_text = "\n".join(f"{i+1}. {area}" for i, area in enumerate(cls.focus_areas))
         
-        instructions = f"{mission}\n\n"
+        instructions = f"{cls.TEAM_MISSION}\n\n"
         instructions += f"You are {cls.name}, {cls.role_description}\n\n"
         instructions += f"PERSONALITY: {cls.personality}\n\n"
         instructions += f"FOCUS AREAS:\n{focus_text}\n"
@@ -51,7 +68,7 @@ class BaseTeamAgent(Executor):
         return instructions
 
     @classmethod
-    def build_instructions_with_tools(cls, mission: str) -> str:
+    def build_instructions_with_tools(cls) -> str:
         """Build instructions with tools (for Strategy agent)."""
         focus_text = "\n".join(f"{i+1}. {area}" for i, area in enumerate(cls.focus_areas))
         
@@ -63,7 +80,7 @@ class BaseTeamAgent(Executor):
             "\nUse these tools when you need real-world data."
         )
         
-        instructions = f"{mission}\n\n"
+        instructions = f"{cls.TEAM_MISSION}\n\n"
         instructions += f"You are {cls.name}, {cls.role_description}\n\n"
         instructions += f"PERSONALITY: {cls.personality}\n\n"
         instructions += f"FOCUS AREAS:\n{focus_text}\n\n"
@@ -75,8 +92,6 @@ class BaseTeamAgent(Executor):
     async def create_agent(
         cls,
         default_client: ChatAgent,
-        mission: str,
-        instruction_suffix: str = "",
         client_cache: dict | None = None,
     ) -> ChatAgent:
         """Create an agent instance with optional custom model."""
@@ -92,10 +107,13 @@ class BaseTeamAgent(Executor):
         
         # Build instructions
         if cls.tools:
-            instructions = cls.build_instructions_with_tools(mission)
+            instructions = cls.build_instructions_with_tools()
         else:
-            instructions = cls.build_instructions(mission)
-        instructions += instruction_suffix
+            instructions = cls.build_instructions()
+        
+        # Apply specialist instructions if this is a specialist agent
+        if cls.is_specialist:
+            instructions += cls.specialist_instructions
         
         # Create agent
         if cls.tools:
