@@ -44,62 +44,49 @@ AGENT_METADATA = {
 _workflow_cache = None
 _client_cache = None
 _agents_cache = None
-_router_cache = None
 
 
 async def get_or_create_agents():
-    """Get or create the agent map and router (cached for performance)."""
-    global _agents_cache, _router_cache, _client_cache
+    """Get or create the agent map (cached for performance)."""
+    global _agents_cache, _client_cache
 
-    if _agents_cache is not None and _router_cache is not None:
-        return _agents_cache, _router_cache
+    if _agents_cache is not None:
+        return _agents_cache
 
     client = await get_model_client()
     _client_cache = client
 
-    router_agent = client.create_agent(
-        name="RouterAgent",
-        instructions=(
-            f"{TEAM_MISSION}\n"
-            "You are an intelligent routing assistant that connects requests to the right team member.\n"
-            "\n"
-            "Our team:\n"
-            "- strategy (Claire): Big-picture market analysis, competitive positioning, vision\n"
-            "- architect (Marc): Technical design, system architecture, tech stack decisions\n"
-            "- analyst (Sophie): Product planning, requirements, roadmaps, feature prioritization\n"
-            "- builder (Hugo): Implementation, code, deployment, technical execution\n"
-            "- reviewer (Nina): Quality assurance, gap identification, critical review, validation\n"
-            "\n"
-            "Think about which team member would be most helpful for this request.\n"
-            "Return exactly one word from: strategy, architect, analyst, builder, reviewer.\n"
-            "No extra text."
-        ),
+    # Decision-making instructions for all agents
+    decision_instructions = (
+        "\n\nIMPORTANT: You receive all team messages. Evaluate if this request is relevant to YOUR expertise and role. "
+        "If the question is clearly outside your scope or better suited for another team member, respond with exactly: 'PASS'\n"
+        "If it's relevant to you, provide a helpful response focused on your area of expertise."
     )
 
     strategy_agent = client.create_agent(
         name="StrategyAgent",
-        instructions=StrategyAgent.build_instructions_with_tools(TEAM_MISSION),
+        instructions=StrategyAgent.build_instructions_with_tools(TEAM_MISSION) + decision_instructions,
         tools=[strategy_web_search, strategy_wikipedia_lookup, strategy_fetch_url],
     )
 
     architect_agent = client.create_agent(
         name="TechnicalArchitectAgent",
-        instructions=TechnicalArchitectAgent.build_instructions(TEAM_MISSION),
+        instructions=TechnicalArchitectAgent.build_instructions(TEAM_MISSION) + decision_instructions,
     )
 
     analyst_agent = client.create_agent(
         name="BusinessAnalystAgent",
-        instructions=BusinessAnalystAgent.build_instructions(TEAM_MISSION),
+        instructions=BusinessAnalystAgent.build_instructions(TEAM_MISSION) + decision_instructions,
     )
 
     builder_agent = client.create_agent(
         name="BuilderAgent",
-        instructions=BuilderAgent.build_instructions(TEAM_MISSION),
+        instructions=BuilderAgent.build_instructions(TEAM_MISSION) + decision_instructions,
     )
 
     reviewer_agent = client.create_agent(
         name="ReviewerAgent",
-        instructions=ReviewerAgent.build_instructions(TEAM_MISSION),
+        instructions=ReviewerAgent.build_instructions(TEAM_MISSION) + decision_instructions,
     )
 
     _agents_cache = {
@@ -109,9 +96,8 @@ async def get_or_create_agents():
         "builder": builder_agent,
         "reviewer": reviewer_agent,
     }
-    _router_cache = router_agent
 
-    return _agents_cache, _router_cache
+    return _agents_cache
 
 
 async def get_or_create_workflow():

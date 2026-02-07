@@ -70,7 +70,7 @@ async def main():
         print("=" * 60)
         print("\n[+] Initializing agents...")
 
-        agents, router = await get_or_create_agents()
+        agents = await get_or_create_agents()
 
         root_dir = Path(__file__).resolve().parents[2]
         ui_file = root_dir / "web" / "web_ui.html"
@@ -104,7 +104,7 @@ async def main():
                     else:
                         chat_messages.append(msg)
 
-                # If specific agents were requested, use them; otherwise, use router
+                # If specific agents were requested, use them; otherwise, broadcast to all
                 if requested_agents and isinstance(requested_agents, list) and len(requested_agents) > 0:
                     # Use requested agents
                     selected_agents = [a for a in requested_agents if a in agents]
@@ -112,30 +112,12 @@ async def main():
                     print(f"[DEBUG] Available agents: {list(agents.keys())}")
                     print(f"[DEBUG] Selected agents: {selected_agents}")
                     if not selected_agents:
-                        selected_agents = ["strategy"]
-                        print(f"[DEBUG] No valid agents found, defaulting to strategy")
+                        selected_agents = list(agents.keys())
+                        print(f"[DEBUG] No valid agents found, broadcasting to all")
                 else:
-                    # Route to best agent
-                    router_prompt = (
-                        f"{TEAM_MISSION} "
-                        "Pick the best agent for this request. "
-                        "Respond with one word: strategy, architect, analyst, builder, reviewer."
-                    )
-                    router_messages = [
-                        ChatMessage(role=Role.SYSTEM, text=router_prompt),
-                    ] + chat_messages
-
-                    route_response = await router.run(router_messages)
-                    choice = "strategy"
-                    if hasattr(route_response, "messages") and route_response.messages:
-                        last = route_response.messages[-1]
-                        if hasattr(last, "text") and last.text:
-                            choice = last.text.strip().lower()
-
-                    if choice not in agents:
-                        choice = "strategy"
-                    
-                    selected_agents = [choice]
+                    # Broadcast to all agents - they'll decide if they should respond
+                    selected_agents = list(agents.keys())
+                    print(f"[DEBUG] Broadcasting to all agents: {selected_agents}")
 
                 # Run all selected agents in parallel
                 import asyncio
@@ -170,14 +152,29 @@ async def main():
                 # Run all agents in parallel
                 results = await asyncio.gather(*[run_agent(agent_key) for agent_key in selected_agents])
                 
+                # Filter out agents that chose not to respond (returned "PASS")
+                active_results = [
+                    r for r in results 
+                    if r.get("output", "").strip().upper() != "PASS"
+                ]
+                
+                # If no agents responded, return a helpful message
+                if not active_results:
+                    return JSONResponse({
+                        "output": "No agents felt this question was in their area of expertise. Please try rephrasing or being more specific.",
+                        "agent": "system",
+                        "agent_label": "System",
+                        "status": "no_response"
+                    })
+                
                 # Return single or multiple responses
-                if len(results) == 1:
-                    return JSONResponse(results[0])
+                if len(active_results) == 1:
+                    return JSONResponse(active_results[0])
                 else:
                     return JSONResponse({
-                        "responses": results,
+                        "responses": active_results,
                         "status": "complete",
-                        "agent_count": len(results)
+                        "agent_count": len(active_results)
                     })
                 
             except Exception as e:
