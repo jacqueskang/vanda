@@ -650,15 +650,33 @@
                 agent.key.toLowerCase().includes(currentMention)
             );
             
-            if (filtered.length > 0) {
-                showSuggestions(filtered);
+            // Check if "all" matches
+            const showAll = "all".includes(currentMention);
+            
+            if (filtered.length > 0 || showAll) {
+                showSuggestions(filtered, showAll);
             } else {
                 closeSuggestions();
             }
         });
         
-        function showSuggestions(agents) {
-            agentSuggestions.innerHTML = agents.map(agent => `
+        function showSuggestions(agents, showAll = false) {
+            let html = '';
+            
+            // Add "All Agents" option if it matches
+            if (showAll) {
+                html += `
+                    <div class="agent-suggestion-item" onclick="selectAllAgents()">
+                        <div class="agent-suggestion-avatar" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">@</div>
+                        <div class="agent-suggestion-info">
+                            <strong>All Agents</strong>
+                            <small>Select all team members</small>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            html += agents.map(agent => `
                 <div class="agent-suggestion-item" onclick="selectAgent('${agent.key}', '${agent.name}', '${agent.avatar}')">
                     <img class="agent-suggestion-avatar" src="${agent.avatar}" alt="${agent.name}" />
                     <div class="agent-suggestion-info">
@@ -667,6 +685,8 @@
                     </div>
                 </div>
             `).join("");
+            
+            agentSuggestions.innerHTML = html;
             agentSuggestions.classList.add("active");
         }
         
@@ -694,6 +714,31 @@
                 selectedAgents.push({ key, name, avatar });
                 renderSelectedAgents();
             }
+            
+            closeSuggestions();
+            questionInput.focus();
+        }
+        
+        function selectAllAgents() {
+            // Replace @mention with @all in input
+            let text = questionInput.value;
+            const atIndex = text.lastIndexOf("@");
+            if (atIndex !== -1) {
+                const beforeAt = text.substring(0, atIndex);
+                const afterCursor = text.substring(questionInput.selectionStart);
+                text = beforeAt + "@all " + afterCursor;
+                questionInput.value = text;
+                // Set cursor position after the inserted mention
+                const newPos = beforeAt.length + 5;
+                questionInput.setSelectionRange(newPos, newPos);
+            }
+            
+            // Add all agents to selected
+            selectedAgents = [];
+            AGENTS.forEach(agent => {
+                selectedAgents.push({ key: agent.key, name: agent.name, avatar: agent.avatar });
+            });
+            renderSelectedAgents();
             
             closeSuggestions();
             questionInput.focus();
