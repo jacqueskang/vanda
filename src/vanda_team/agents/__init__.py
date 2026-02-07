@@ -33,19 +33,17 @@ AGENT_METADATA = {
 }
 
 _workflow_cache = None
-_client_cache = None
 _agents_cache = None
 
 
 async def get_or_create_agents():
     """Get or create the agent map (cached for performance)."""
-    global _agents_cache, _client_cache
+    global _agents_cache
 
     if _agents_cache is not None:
         return _agents_cache
 
     client = await get_model_client()
-    _client_cache = client
     client_cache: dict[str, object] = {}
 
     strategy_agent = await StrategyAgent.create_agent(
@@ -95,15 +93,14 @@ async def get_or_create_agents():
 
 async def get_or_create_workflow():
     """Get or create the multi-agent workflow (cached for performance)."""
-    global _workflow_cache, _client_cache
+    global _workflow_cache
 
     if _workflow_cache is not None:
-        return _workflow_cache, _client_cache
+        return _workflow_cache
 
     print("[*] Initializing AI agent team...")
 
     client = await get_model_client()
-    _client_cache = client
     client_cache: dict[str, object] = {}
 
     print("[*] Creating specialized agents...")
@@ -154,7 +151,7 @@ async def get_or_create_workflow():
     _workflow_cache = workflow
 
     print("[+] Team ready!\n")
-    return workflow, client
+    return workflow
 
 
 __all__ = [

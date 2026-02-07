@@ -14,7 +14,7 @@ from agent_framework import (
 )
 
 from vanda_team import config as _config  # Loads .env
-from vanda_team.agents import AGENT_METADATA, TEAM_MISSION, get_or_create_agents, get_or_create_workflow
+from vanda_team.agents import AGENT_METADATA, get_or_create_agents, get_or_create_workflow, BaseTeamAgent
 
 
 class BusinessTeamAgent(Executor):
@@ -29,7 +29,7 @@ class BusinessTeamAgent(Executor):
         messages: list[ChatMessage],
         ctx: WorkflowContext[Never, str],
     ) -> None:
-        workflow, _client = await get_or_create_workflow()
+        workflow = await get_or_create_workflow()
 
         user_input = ""
         for msg in messages:
@@ -117,7 +117,7 @@ async def main():
                 import asyncio
                 
                 async def run_agent(agent_key):
-                    mission_message = ChatMessage(role=Role.SYSTEM, text=TEAM_MISSION)
+                    mission_message = ChatMessage(role=Role.SYSTEM, text=BaseTeamAgent.TEAM_MISSION)
                     response = await agents[agent_key].run([mission_message] + chat_messages)
                     
                     response_text = ""
@@ -179,7 +179,7 @@ async def main():
                         extended_messages = chat_messages + [assistant_msg]
                         
                         async def run_mentioned_agent(agent_key):
-                            mission_message = ChatMessage(role=Role.SYSTEM, text=TEAM_MISSION)
+                            mission_message = ChatMessage(role=Role.SYSTEM, text=BaseTeamAgent.TEAM_MISSION)
                             response = await agents[agent_key].run([mission_message] + extended_messages)
                             
                             response_text = ""
