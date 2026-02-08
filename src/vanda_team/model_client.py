@@ -15,8 +15,13 @@ async def get_model_client(
     model_endpoint = os.getenv(
         "MODEL_ENDPOINT", "https://models.github.ai/inference/"
     ).strip()
+    model_name_env = os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
     model_name = (
-        (model_name_override or os.getenv("MODEL_NAME", "openai/gpt-4o-mini")) or ""
+        (
+            model_name_override
+            or (model_name_env if model_name_env else "openai/gpt-4o-mini")
+        )
+        or ""
     ).strip()
     github_token = (os.getenv("GITHUB_TOKEN", "") or "").strip()
 
@@ -31,12 +36,12 @@ async def get_model_client(
                 "3. Re-run this script"
             )
 
-        client: Union[AzureOpenAIChatClient, OpenAIChatClient] = OpenAIChatClient(
+        openai_client: OpenAIChatClient = OpenAIChatClient(
             base_url=model_endpoint,
             model_id=model_name,
             api_key=github_token,
         )
-        return client
+        return openai_client
 
     credential = DefaultAzureCredential()
     endpoint = model_endpoint
@@ -50,10 +55,10 @@ async def get_model_client(
             "3. Update MODEL_NAME in .env"
         )
 
-    client = AzureOpenAIChatClient(
+    client: AzureOpenAIChatClient = AzureOpenAIChatClient(
         endpoint=endpoint,
         deployment_name=deployment,
-        ad_token_provider=lambda: credential.get_token(
+        ad_token_provider=lambda: credential.get_token(  # type: ignore
             "https://cognitiveservices.azure.com/.default"
         ).token,
     )

@@ -29,7 +29,7 @@ async def get_or_create_agents() -> Dict[str, ChatAgent]:
     global _agents_cache
 
     if _agents_cache is not None:
-        return _agents_cache
+        return _agents_cache  # type: ignore
 
     strategy_agent = await StrategyAgent.create_agent()
     architect_agent = await TechnicalArchitectAgent.create_agent()
@@ -55,7 +55,7 @@ async def get_or_create_workflow() -> Any:
     global _workflow_cache
 
     if _workflow_cache is not None:
-        return _workflow_cache
+        return _workflow_cache  # type: ignore
 
     print("[*] Initializing AI agent team...")
 
@@ -81,11 +81,11 @@ async def get_or_create_workflow() -> Any:
 
     workflow = (
         WorkflowBuilder()
-        .set_start_executor(strategy)
-        .add_edge(strategy, architect)
-        .add_edge(architect, analyst)
-        .add_edge(analyst, builder)
-        .add_edge(builder, reviewer)
+        .set_start_executor(strategy)  # type: ignore
+        .add_edge(strategy, architect)  # type: ignore
+        .add_edge(architect, analyst)  # type: ignore
+        .add_edge(analyst, builder)  # type: ignore
+        .add_edge(builder, reviewer)  # type: ignore
         .build()
     )
 

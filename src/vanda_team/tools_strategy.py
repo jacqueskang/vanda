@@ -9,7 +9,7 @@ from langchain_community.tools import (
 from langchain_community.utilities import WikipediaAPIWrapper, RequestsWrapper
 
 _ddg_search = DuckDuckGoSearchRun()
-_wiki_search = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(wiki_client=None))
+_wiki_search = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())  # type: ignore
 _requests_get = RequestsGetTool(
     allow_dangerous_requests=True,
     requests_wrapper=RequestsWrapper(),
@@ -20,7 +20,8 @@ _requests_get = RequestsGetTool(
 def strategy_web_search(query: str) -> str:
     """Search the web for market, competitor, and trend information."""
     try:
-        return _ddg_search.run(query)
+        result = _ddg_search.run(query)
+        return str(result) if result is not None else "No results found"
     except Exception as e:
         return f"Search error: {str(e)}"
 
@@ -29,7 +30,8 @@ def strategy_web_search(query: str) -> str:
 def strategy_wikipedia_lookup(query: str) -> str:
     """Lookup background information on Wikipedia."""
     try:
-        return _wiki_search.run(query)
+        result = _wiki_search.run(query)
+        return str(result) if result is not None else "No results found"
     except Exception as e:
         return f"Wikipedia error: {str(e)}"
 
@@ -38,7 +40,8 @@ def strategy_wikipedia_lookup(query: str) -> str:
 def strategy_fetch_url(url: str) -> str:
     """Fetch public data from a URL for analysis."""
     try:
-        return _requests_get.run(url)
+        result = _requests_get.run(url)
+        return str(result) if result is not None else "No content found"
     except Exception as e:
         return f"Fetch error: {str(e)}"
 

@@ -46,6 +46,6 @@ class ReviewerAgent(BaseSpecialistAgent):
         response = await self.agent.run(messages)
         if response.messages:
             final_content = response.messages[-1].contents[-1]
-            if hasattr(final_content, "text") and final_content.text:
-                final_text = final_content.text
+            if hasattr(final_content, "text") and getattr(final_content, "text", None):
+                final_text = getattr(final_content, "text")
                 await ctx.yield_output(final_text)

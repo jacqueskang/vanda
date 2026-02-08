@@ -1,7 +1,7 @@
 """Base team agent class with shared properties and methods."""
 
 import abc
-from typing import Union, List
+from typing import Union, Dict, Any, List
 from agent_framework import ChatAgent
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.openai import OpenAIChatClient
@@ -35,7 +35,7 @@ class BaseTeamAgent(abc.ABC):
 
     def __init__(self, agent: ChatAgent, id: str):
         self.agent = agent
-        super().__init__(id=id)
+        self.id = id
 
     @abc.abstractmethod
     def should_respond(self, messages: List[ChatMessage]) -> bool:
@@ -43,7 +43,7 @@ class BaseTeamAgent(abc.ABC):
         pass
 
     @classmethod
-    def metadata(cls) -> dict:
+    def metadata(cls) -> Dict[str, Any]:
         return {
             "key": cls.key,
             "name": cls.name,
