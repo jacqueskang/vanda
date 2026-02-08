@@ -67,20 +67,16 @@ class BaseTeamAgent(Executor, abc.ABC):
             model_name=cls.model_name,
         )
 
-    @staticmethod
-    async def get_model_client(
-        model_name_override: str | None = None,
-    ) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:
+    @classmethod
+    async def _get_model_client(cls) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:
         """Initialize the model client based on configuration."""
         model_endpoint = os.getenv(
             "MODEL_ENDPOINT", "https://models.github.ai/inference/"
         ).strip()
         model_name_env = os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
         model_name = (
-            (
-                model_name_override
-                or (model_name_env if model_name_env else "openai/gpt-4o-mini")
-            )
+            (cls.model_name.strip() if cls.model_name else "")
+            or (model_name_env if model_name_env else "openai/gpt-4o-mini")
             or ""
         ).strip()
         github_token = (os.getenv("GITHUB_TOKEN", "") or "").strip()
@@ -175,9 +171,7 @@ class BaseTeamAgent(Executor, abc.ABC):
     @classmethod
     async def create_agent(cls) -> ChatAgent:
         """Create an agent instance with optional custom model."""
-        # Get the right client based on model_name
-        model_name = cls.model_name.strip() if cls.model_name else ""
-        client = await cls.get_model_client(model_name if model_name else None)
+        client = await cls._get_model_client()
 
         # Build instructions
         if cls.tools:
