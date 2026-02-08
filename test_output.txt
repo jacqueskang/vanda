@@ -1,3 +1,0 @@
-Status: 200
-Response type: dict
-Single response: Sophie (Business Analyst)

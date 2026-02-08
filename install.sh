@@ -17,16 +17,20 @@ if [[ ! -d "$VENV_DIR" ]]; then
   "$PYTHON_BIN" -m venv "$VENV_DIR"
 fi
 
-# shellcheck disable=SC1091
-source "$VENV_DIR/bin/activate"
+# Install dependencies using the venv python
+"$VENV_DIR/bin/python" -m pip install --upgrade pip
+"$VENV_DIR/bin/python" -m pip install -r requirements.txt
 
-"$PYTHON_BIN" -m pip install --upgrade pip
-"$PYTHON_BIN" -m pip install -r requirements.txt
-
-echo "✅ Venv setup and activated!"
+echo "✅ Venv setup complete!"
 echo ""
 echo "To activate the virtual environment in future terminal sessions, run:"
 echo "  source $VENV_DIR/bin/activate"
 echo ""
 echo "Tip: Run this script with 'source' to activate in your current shell:"
 echo "  source ./install.sh"
+echo ""
+
+# Activate the virtual environment
+# shellcheck disable=SC1091
+source "$VENV_DIR/bin/activate"
+echo "✅ Virtual environment activated!"
