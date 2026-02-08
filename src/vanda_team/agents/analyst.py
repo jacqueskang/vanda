@@ -35,8 +35,8 @@ class BusinessAnalystAgent(BaseSpecialistAgent):
         "User stories and acceptance criteria",
     ]
 
-    def __init__(self, agent: ChatAgent, id: str = "analyst"):
-        super().__init__(agent=agent, id=id)
+    def __init__(self, agent: ChatAgent):
+        super().__init__(agent)
 
     @handler
     async def handle_analysis(

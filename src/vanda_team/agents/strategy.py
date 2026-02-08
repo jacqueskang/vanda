@@ -39,8 +39,8 @@ class StrategyAgent(BaseSpecialistAgent):
         "Regulatory challenges and risk mitigation",
     ]
 
-    def __init__(self, agent: ChatAgent, id: str = "strategy"):
-        super().__init__(agent=agent, id=id)
+    def __init__(self, agent: ChatAgent):
+        super().__init__(agent)
 
     @handler
     async def handle_business_inquiry(

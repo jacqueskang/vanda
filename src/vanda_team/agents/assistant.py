@@ -44,8 +44,8 @@ class CEOAssistantAgent(BaseTeamAgent):
         "Quality/review → @Nina | Only answer general greetings/small talk yourself",
     ]
 
-    def __init__(self, agent: ChatAgent, id: str = "assistant"):
-        super().__init__(agent=agent, id=id)
+    def __init__(self, agent: ChatAgent):
+        super().__init__(agent)
 
     def should_respond(self, messages: List[ChatMessage]) -> bool:
         """CEO Assistant responds if mentioned or if no specialists are mentioned."""

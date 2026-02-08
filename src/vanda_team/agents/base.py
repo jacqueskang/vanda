@@ -47,9 +47,9 @@ class BaseTeamAgent(Executor, abc.ABC):
 
     agent: ChatAgent
 
-    def __init__(self, agent: ChatAgent, id: str):
+    def __init__(self, agent: ChatAgent):
         self.agent = agent
-        self.id = id
+        self.id = self.key
 
     @abc.abstractmethod
     def should_respond(self, messages: List[ChatMessage]) -> bool:

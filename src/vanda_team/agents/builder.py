@@ -35,8 +35,8 @@ class BuilderAgent(BaseSpecialistAgent):
         "Security and performance considerations",
     ]
 
-    def __init__(self, agent: ChatAgent, id: str = "builder"):
-        super().__init__(agent=agent, id=id)
+    def __init__(self, agent: ChatAgent):
+        super().__init__(agent)
 
     @handler
     async def handle_implementation(

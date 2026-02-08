@@ -36,8 +36,8 @@ class ReviewerAgent(BaseSpecialistAgent):
         "Producing a clean executive summary",
     ]
 
-    def __init__(self, agent: ChatAgent, id: str = "reviewer"):
-        super().__init__(agent=agent, id=id)
+    def __init__(self, agent: ChatAgent):
+        super().__init__(agent)
 
     @handler
     async def handle_review(

@@ -121,12 +121,12 @@ async def main() -> None:
 
         # Create custom agent instances
         custom_agents = {
-            "assistant": CEOAssistantAgent(agents["assistant"], "assistant"),
-            "strategy": StrategyAgent(agents["strategy"], "strategy"),
-            "architect": TechnicalArchitectAgent(agents["architect"], "architect"),
-            "analyst": BusinessAnalystAgent(agents["analyst"], "analyst"),
-            "builder": BuilderAgent(agents["builder"], "builder"),
-            "reviewer": ReviewerAgent(agents["reviewer"], "reviewer"),
+            "assistant": CEOAssistantAgent(agents["assistant"]),
+            "strategy": StrategyAgent(agents["strategy"]),
+            "architect": TechnicalArchitectAgent(agents["architect"]),
+            "analyst": BusinessAnalystAgent(agents["analyst"]),
+            "builder": BuilderAgent(agents["builder"]),
+            "reviewer": ReviewerAgent(agents["reviewer"]),
         }
 
         root_dir = Path(__file__).resolve().parents[2]
