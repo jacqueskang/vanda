@@ -31,12 +31,7 @@ class BaseSpecialistAgent(BaseTeamAgent):
         """Create an agent instance with specialist instructions."""
         # Get the right client based on model_name
         model_name = cls.model_name.strip() if cls.model_name else ""
-        if model_name:
-            from vanda_team.model_client import get_model_client
-
-            client = await get_model_client(model_name)
-        else:
-            client = await cls.get_default_client()
+        client = await cls.get_model_client(model_name if model_name else None)
 
         # Build instructions
         if cls.tools:

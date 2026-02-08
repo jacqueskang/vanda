@@ -1,12 +1,13 @@
 """Base team agent class with shared properties and methods."""
 
 import abc
+import os
 from dataclasses import dataclass
 from typing import Union, List
 from agent_framework import ChatAgent, Executor
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.openai import OpenAIChatClient
-from vanda_team.model_client import get_model_client
+from azure.identity.aio import DefaultAzureCredential
 from agent_framework import ChatMessage
 
 
@@ -66,10 +67,63 @@ class BaseTeamAgent(Executor, abc.ABC):
             model_name=cls.model_name,
         )
 
-    @classmethod
-    async def get_default_client(cls) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:
-        """Get the default model client."""
-        return await get_model_client()
+    @staticmethod
+    async def get_model_client(
+        model_name_override: str | None = None,
+    ) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:
+        """Initialize the model client based on configuration."""
+        model_endpoint = os.getenv(
+            "MODEL_ENDPOINT", "https://models.github.ai/inference/"
+        ).strip()
+        model_name_env = os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
+        model_name = (
+            (
+                model_name_override
+                or (model_name_env if model_name_env else "openai/gpt-4o-mini")
+            )
+            or ""
+        ).strip()
+        github_token = (os.getenv("GITHUB_TOKEN", "") or "").strip()
+
+        if "models.github.ai" in model_endpoint or model_endpoint.startswith(
+            "https://models"
+        ):
+            if not github_token:
+                raise ValueError(
+                    "GitHub token not found. Please:\n"
+                    "1. Create a token at: https://github.com/settings/tokens\n"
+                    "2. Set GITHUB_TOKEN in .env file\n"
+                    "3. Re-run this script"
+                )
+
+            openai_client: OpenAIChatClient = OpenAIChatClient(
+                base_url=model_endpoint,
+                model_id=model_name,
+                api_key=github_token,
+            )
+            return openai_client
+
+        credential = DefaultAzureCredential()
+        endpoint = model_endpoint
+        deployment = model_name
+
+        if not endpoint or endpoint.startswith("https://models"):
+            raise ValueError(
+                "Azure Foundry endpoint not configured. Please:\n"
+                "1. Set up an Azure AI Foundry project\n"
+                "2. Update MODEL_ENDPOINT in .env\n"
+                "3. Update MODEL_NAME in .env"
+            )
+
+        client: AzureOpenAIChatClient = AzureOpenAIChatClient(
+            endpoint=endpoint,
+            deployment_name=deployment,
+            ad_token_provider=lambda: credential.get_token(  # type: ignore
+                "https://cognitiveservices.azure.com/.default"
+            ).token,
+        )
+
+        return client
 
     @classmethod
     def build_instructions(cls, tools_info: str = "") -> str:
@@ -123,10 +177,7 @@ class BaseTeamAgent(Executor, abc.ABC):
         """Create an agent instance with optional custom model."""
         # Get the right client based on model_name
         model_name = cls.model_name.strip() if cls.model_name else ""
-        if model_name:
-            client = await get_model_client(model_name)
-        else:
-            client = await cls.get_default_client()
+        client = await cls.get_model_client(model_name if model_name else None)
 
         # Build instructions
         if cls.tools:
