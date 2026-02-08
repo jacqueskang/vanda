@@ -9,7 +9,7 @@ _requests_get = RequestsGetTool(
 
 
 @tool
-def strategy_fetch_url(url: str) -> str:
+def fetch_url(url: str) -> str:
     """Fetch public data from a URL for analysis."""
     try:
         result = _requests_get.run(url)

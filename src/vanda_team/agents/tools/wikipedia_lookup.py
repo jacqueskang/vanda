@@ -6,7 +6,7 @@ _wiki_search = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())  # type: ign
 
 
 @tool
-def strategy_wikipedia_lookup(query: str) -> str:
+def wikipedia_lookup(query: str) -> str:
     """Lookup background information on Wikipedia."""
     try:
         result = _wiki_search.run(query)

@@ -3,9 +3,9 @@
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
 from vanda_team.agents.specialist import BaseSpecialistAgent
-from .tools.web_search import strategy_web_search
-from .tools.wikipedia_lookup import strategy_wikipedia_lookup
-from .tools.fetch_url import strategy_fetch_url
+from .tools.web_search import web_search
+from .tools.wikipedia_lookup import wikipedia_lookup
+from .tools.fetch_url import fetch_url
 
 
 class StrategyAgent(BaseSpecialistAgent):
@@ -17,7 +17,7 @@ class StrategyAgent(BaseSpecialistAgent):
     role_title = "Strategy Lead"
     avatar_url = "https://i.pravatar.cc/64?img=47"
     model_name = ""
-    tools = [strategy_web_search, strategy_wikipedia_lookup, strategy_fetch_url]
+    tools = [web_search, wikipedia_lookup, fetch_url]
     role_description = (
         "a brilliant and visionary business strategist with deep expertise in AI, labor markets, and "
         "emerging platform opportunities. Your role is to analyze the market opportunity for an "

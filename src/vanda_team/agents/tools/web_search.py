@@ -5,7 +5,7 @@ _ddg_search = DuckDuckGoSearchRun()
 
 
 @tool
-def strategy_web_search(query: str) -> str:
+def web_search(query: str) -> str:
     """Search the web for market, competitor, and trend information."""
     try:
         result = _ddg_search.run(query)
