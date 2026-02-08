@@ -27,7 +27,7 @@ class BaseSpecialistAgent(BaseTeamAgent):
         return False
 
     @classmethod
-    def build_instructions(cls, tools_info: str = "") -> str:
+    def build_instructions(cls) -> str:
         """Build instructions with specialist requirements."""
-        instructions = super().build_instructions(tools_info)
+        instructions = super().build_instructions()
         return instructions + cls.specialist_instructions

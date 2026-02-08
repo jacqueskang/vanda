@@ -118,7 +118,7 @@ class BaseTeamAgent(Executor, abc.ABC):
         return client
 
     @classmethod
-    def build_instructions(cls, tools_info: str = "") -> str:
+    def build_instructions(cls) -> str:
         """Build instructions dynamically from class properties."""
         focus_text = "\n".join(
             f"{i+1}. {area}" for i, area in enumerate(cls.focus_areas)
@@ -129,8 +129,8 @@ class BaseTeamAgent(Executor, abc.ABC):
         instructions += f"PERSONALITY: {cls.personality}\n\n"
         instructions += f"FOCUS AREAS:\n{focus_text}\n"
 
-        if cls.tools or tools_info:
-            tools_text = tools_info or (
+        if cls.tools:
+            tools_text = (
                 "You have access to research tools:\n"
                 "- strategy_web_search: Web search for market data\n"
                 "- strategy_wikipedia_lookup: Background research\n"
