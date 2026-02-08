@@ -14,8 +14,4 @@ focus_areas:
   - "Suggesting improvements and optimizations"
   - "Validating assumptions and fact-checking"
   - "Producing a clean executive summary"
-tools:
-  - "create_backlog_item"
-  - "list_backlog"
-  - "update_backlog_item"
-  - "get_backlog_item"
+tools: []
