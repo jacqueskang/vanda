@@ -6,7 +6,7 @@ from agent_framework import ChatAgent, WorkflowBuilder
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
 from .assistant import CEOAssistantAgent
-from .base import BaseTeamAgent, AgentMetadata
+from .base import BaseAgent, AgentMetadata
 from .builder import BuilderAgent
 from .reviewer import ReviewerAgent
 from .strategy import StrategyAgent
@@ -20,11 +20,11 @@ AGENT_METADATA: Dict[str, AgentMetadata] = {
     CEOAssistantAgent.key: CEOAssistantAgent.metadata(),
 }
 
-_team_agents_cache: Optional[Dict[str, BaseTeamAgent]] = None
+_team_agents_cache: Optional[Dict[str, BaseAgent]] = None
 _workflow_cache: Optional[object] = None
 
 
-async def create_all_team_agents() -> Dict[str, BaseTeamAgent]:
+async def create_all_team_agents() -> Dict[str, BaseAgent]:
     """Create fully initialized team agent instances (cached for performance)."""
     global _team_agents_cache
 
@@ -100,7 +100,7 @@ async def get_or_create_workflow() -> object:
 
 
 __all__ = [
-    "BaseTeamAgent",
+    "BaseAgent",
     "AgentMetadata",
     "StrategyAgent",
     "TechnicalArchitectAgent",

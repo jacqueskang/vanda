@@ -23,7 +23,7 @@ class AgentMetadata:
     model_name: str
 
 
-class BaseTeamAgent(Executor, abc.ABC):
+class BaseAgent(Executor, abc.ABC):
     """Base agent with shared metadata."""
 
     # Team mission (shared across all agents)
@@ -52,7 +52,7 @@ class BaseTeamAgent(Executor, abc.ABC):
         self.id = self.key
 
     @classmethod
-    async def create(cls) -> "BaseTeamAgent":
+    async def create(cls) -> "BaseAgent":
         """Factory method to create a fully initialized agent instance.
 
         This handles ChatAgent creation and wrapping it in the team agent.

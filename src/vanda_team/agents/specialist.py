@@ -3,10 +3,10 @@
 import re
 from typing import List
 from agent_framework import ChatMessage
-from vanda_team.agents.base import BaseTeamAgent
+from vanda_team.agents.base import BaseAgent
 
 
-class BaseSpecialistAgent(BaseTeamAgent):
+class BaseSpecialistAgent(BaseAgent):
     """Base class for specialist agents that only respond when mentioned."""
 
     # Specialist agents only respond when explicitly mentioned

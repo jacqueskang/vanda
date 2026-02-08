@@ -5,10 +5,10 @@ from typing import List
 
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
-from vanda_team.agents.base import BaseTeamAgent
+from vanda_team.agents.base import BaseAgent
 
 
-class CEOAssistantAgent(BaseTeamAgent):
+class CEOAssistantAgent(BaseAgent):
 
     key = "assistant"
     name = "Emma"
