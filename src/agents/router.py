@@ -101,28 +101,45 @@ class RouterAgent(BaseAgent):
         # Dynamically build team members description from team agents
         team_members_description = self._build_team_members_description()
 
-        prompt = f"""Analyze the following conversation and determine which team members should respond.
-
-Team Members and Their Expertise:
-{team_members_description}
-
-Recent Conversation:
-{context}
-
-Based on the conversation, which team members should respond? Return ONLY a JSON object with this exact format:
-{{
-  "agents": ["key1", "key2"],
-  "reasoning": "brief explanation"
-}}
-
-Example:
-{{"agents": ["architect", "builder"], "reasoning": "Technical architecture and implementation guidance needed"}}
-
-If no specialized response is needed, return:
-{{"agents": [], "reasoning": "General conversation or current team members can handle"}}
-
-Return ONLY valid JSON, no other text."""
-
+        prompt = (
+            "You are a message router. Analyze the conversation and determine "
+            "which specialized team members should respond. Only recommend "
+            "specialists when truly needed - the assistant is the default fallback "
+            "for all other cases.\n\n"
+            "Team Members and Their Expertise:\n"
+            f"{team_members_description}\n\n"
+            "ROUTING GUIDELINES:\n"
+            "- TECHNICAL (architecture, design, tech stacks, language viability) "
+            "→ architect\n"
+            "- MARKET/STRATEGY (competitive analysis, growth, positioning) "
+            "→ strategy\n"
+            "- PRODUCT/REQUIREMENTS (features, roadmaps, specifications) → analyst\n"
+            "- IMPLEMENTATION/CODE (coding, building, solutions) → builder\n"
+            "- QUALITY/REVIEW (testing, validation, QA) → reviewer\n\n"
+            "FALLBACK TO ASSISTANT:\n"
+            "Return empty agents list for: greetings, general questions, or anything "
+            "that doesn't require a specialist. The assistant will automatically handle "
+            "as fallback.\n\n"
+            f"Recent Conversation:\n{context}\n\n"
+            "DECISION RULES:\n"
+            "1. Only recommend specialists for their specific domains\n"
+            "2. For multi-domain questions, recommend all relevant specialists\n"
+            "3. If question doesn't fit specialist domains, return empty list "
+            "(assistant is fallback)\n"
+            "4. Return empty list for: greetings, small talk, general knowledge\n\n"
+            "Return ONLY a JSON object:\n"
+            '{"agents": ["key1", "key2"], "reasoning": "brief explanation"}\n\n'
+            "Examples:\n"
+            '- "Is C# obsolete?" → {"agents": ["architect"], '
+            '"reasoning": "Technical question about language viability"}\n'
+            '- "What\'s our competitive advantage?" → {"agents": ["strategy"], '
+            '"reasoning": "Market and competitive positioning"}\n'
+            '- "Hello, how are you?" → {"agents": [], '
+            '"reasoning": "Greeting - assistant will handle as fallback"}\n'
+            '- "What\'s the weather?" → {"agents": [], '
+            '"reasoning": "General knowledge - assistant will handle as fallback"}\n\n'
+            "Return ONLY valid JSON, no other text."
+        )
         return prompt
 
     def _build_team_members_description(self) -> str:
