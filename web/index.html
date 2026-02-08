@@ -673,18 +673,21 @@
         }
         
         function selectAgent(key, name, avatar) {
-            // Check if we're replacing an @ mention (from autocomplete)
+            // Check if autocomplete is active (user is typing @mention)
+            const isAutocomplete = agentSuggestions.classList.contains("active");
             let text = questionInput.value;
-            const atIndex = text.lastIndexOf("@");
             
-            if (atIndex !== -1 && atIndex < questionInput.selectionStart) {
+            if (isAutocomplete) {
                 // Replace @mention with @name (autocomplete scenario)
-                const beforeAt = text.substring(0, atIndex);
-                const afterCursor = text.substring(questionInput.selectionStart);
-                text = beforeAt + "@" + name + " " + afterCursor;
-                questionInput.value = text;
-                const newPos = beforeAt.length + name.length + 2;
-                questionInput.setSelectionRange(newPos, newPos);
+                const atIndex = text.lastIndexOf("@");
+                if (atIndex !== -1) {
+                    const beforeAt = text.substring(0, atIndex);
+                    const afterCursor = text.substring(questionInput.selectionStart);
+                    text = beforeAt + "@" + name + " " + afterCursor;
+                    questionInput.value = text;
+                    const newPos = beforeAt.length + name.length + 2;
+                    questionInput.setSelectionRange(newPos, newPos);
+                }
             } else {
                 // Just append @name to input (clicked from sidebar)
                 const currentValue = questionInput.value;
