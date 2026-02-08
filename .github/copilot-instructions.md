@@ -1,22 +1,25 @@
-# GitHub Copilot Instructions for Vanda Team Project
+# GitHub Copilot Instructions
 
-## Environment Setup
-1. **Always activate the virtual environment** before working on tasks:
+## Pre-Task Setup
+1. **Activate virtual environment**:
    ```bash
    source .venv/bin/activate
    ```
 
-## Task Completion Checklist
-Before finishing any task:
-1. **Run the build script** to verify code quality and type checking:
+2. **Setup pre-commit hooks** (one-time):
+   ```bash
+   pre-commit install
+   ```
+
+## Task Completion Requirements
+After completing any task, **ALWAYS**:
+1. Run the build script:
    ```bash
    ./build.sh
    ```
-2. **Fix any issues** reported by the build script (black formatting, mypy type checking, etc.)
-3. Ensure all checks pass with no errors before considering the task complete
+2. Fix any errors from **black** (formatting) or **mypy** (type checking)
+3. Verify the build passes with: `Success: no issues found`
 
-## Build Script Details
-The `build.sh` script performs:
-- **Black**: Code formatting validation
-- **MyPy**: Type checking validation
-- Reports any findings and must pass with "Success: no issues found"
+## Additional Commands
+- **Manual pre-commit check**: `pre-commit run --all-files`
+- **Fresh setup**: `source ./install.sh` (activates venv and pre-commit at the end)
