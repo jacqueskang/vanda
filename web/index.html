@@ -373,7 +373,8 @@
             border-bottom: none;
         }
 
-        .agent-suggestion-item:hover {
+        .agent-suggestion-item:hover,
+        .agent-suggestion-item.selected {
             background: #f8fafc;
         }
 
@@ -523,6 +524,7 @@
         let AGENTS = [];
         let currentMention = "";
         let mentionStartIndex = -1;
+        let selectedSuggestionIndex = -1;
         
         // Load agents from backend
         async function loadAgents() {
@@ -627,34 +629,16 @@
                 agent.key.toLowerCase().includes(currentMention)
             );
             
-            // Check if "all" matches
-            const showAll = "all".includes(currentMention);
-            
-            if (filtered.length > 0 || showAll) {
-                showSuggestions(filtered, showAll);
+            if (filtered.length > 0) {
+                showSuggestions(filtered);
             } else {
                 closeSuggestions();
             }
         });
         
-        function showSuggestions(agents, showAll = false) {
-            let html = '';
-            
-            // Add "All Agents" option if it matches
-            if (showAll) {
-                html += `
-                    <div class="agent-suggestion-item" onclick="selectAllAgents()">
-                        <div class="agent-suggestion-avatar" style="background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">@</div>
-                        <div class="agent-suggestion-info">
-                            <strong>All Agents</strong>
-                            <small>Select all team members</small>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            html += agents.map(agent => `
-                <div class="agent-suggestion-item" onclick="selectAgent('${agent.key}', '${agent.name}', '${agent.avatar}')">
+        function showSuggestions(agents) {
+            const html = agents.map((agent, index) => `
+                <div class="agent-suggestion-item" data-index="${index}" data-key="${agent.key}" data-name="${agent.name}" data-avatar="${agent.avatar}" onclick="selectAgent('${agent.key}', '${agent.name}', '${agent.avatar}')">
                     <img class="agent-suggestion-avatar" src="${agent.avatar}" alt="${agent.name}" />
                     <div class="agent-suggestion-info">
                         <strong>${agent.name}</strong>
@@ -665,11 +649,40 @@
             
             agentSuggestions.innerHTML = html;
             agentSuggestions.classList.add("active");
+            selectedSuggestionIndex = -1;
         }
         
         function closeSuggestions() {
             agentSuggestions.classList.remove("active");
             currentMention = "";
+            selectedSuggestionIndex = -1;
+        }
+        
+        function updateSuggestionSelection() {
+            const items = agentSuggestions.querySelectorAll(".agent-suggestion-item");
+            items.forEach((item, idx) => {
+                if (idx === selectedSuggestionIndex) {
+                    item.classList.add("selected");
+                    item.scrollIntoView({ block: "nearest", behavior: "smooth" });
+                } else {
+                    item.classList.remove("selected");
+                }
+            });
+        }
+        
+        function selectHighlightedSuggestion() {
+            if (selectedSuggestionIndex === -1) return false;
+            
+            const items = agentSuggestions.querySelectorAll(".agent-suggestion-item");
+            const selectedItem = items[selectedSuggestionIndex];
+            if (!selectedItem) return false;
+            
+            selectAgent(
+                selectedItem.dataset.key,
+                selectedItem.dataset.name,
+                selectedItem.dataset.avatar
+            );
+            return true;
         }
         
         function selectAgent(key, name, avatar) {
@@ -694,24 +707,6 @@
                 const needsSpace = currentValue && !currentValue.endsWith(" ");
                 questionInput.value = currentValue + (needsSpace ? " " : "") + "@" + name + " ";
                 questionInput.setSelectionRange(questionInput.value.length, questionInput.value.length);
-            }
-            
-            closeSuggestions();
-            questionInput.focus();
-        }
-        
-        function selectAllAgents() {
-            // Replace @mention with @all in input
-            let text = questionInput.value;
-            const atIndex = text.lastIndexOf("@");
-            if (atIndex !== -1) {
-                const beforeAt = text.substring(0, atIndex);
-                const afterCursor = text.substring(questionInput.selectionStart);
-                text = beforeAt + "@all " + afterCursor;
-                questionInput.value = text;
-                // Set cursor position after the inserted mention
-                const newPos = beforeAt.length + 5;
-                questionInput.setSelectionRange(newPos, newPos);
             }
             
             closeSuggestions();
@@ -902,9 +897,33 @@
             messageEl.remove();
         }
         
-        // Allow Enter key to send
-        questionInput.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") {
+        // Handle keyboard navigation in suggestions and Enter to send
+        questionInput.addEventListener("keydown", (e) => {
+            const isSuggestionsActive = agentSuggestions.classList.contains("active");
+            
+            if (isSuggestionsActive) {
+                const items = agentSuggestions.querySelectorAll(".agent-suggestion-item");
+                const maxIndex = items.length - 1;
+                
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, maxIndex);
+                    updateSuggestionSelection();
+                } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+                    updateSuggestionSelection();
+                } else if (e.key === "Enter") {
+                    if (selectedSuggestionIndex !== -1) {
+                        e.preventDefault();
+                        selectHighlightedSuggestion();
+                    }
+                } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    closeSuggestions();
+                }
+            } else if (e.key === "Enter") {
+                e.preventDefault();
                 sendQuestion();
             }
         });
