@@ -1,9 +1,9 @@
 """Router Agent: analyzes chat and determines which agents should respond."""
 
 import json
-from typing import Dict, List
+from typing import Dict, List, Any
 
-from agent_framework import ChatMessage
+from agent_framework import ChatAgent, ChatMessage
 
 from .base import BaseAgent
 
@@ -11,32 +11,14 @@ from .base import BaseAgent
 class RouterAgent(BaseAgent):
     """Router Agent: analyzes context and routes to appropriate agents."""
 
-    key = "router"
-    name = "Router"
-    gender = "neutral"
-    role_title = "Message Router"
-    avatar_url = ""
-    model_name = ""
-    role_description = (
-        "an intelligent message router that analyzes conversations and determines "
-        "which team members should respond."
-    )
-    personality = (
-        "You are precise, analytical, and objective. You analyze context without bias."
-    )
-    focus_areas = [
-        "Analyze conversation context and topics",
-        "Route messages to appropriate specialists",
-        "Understanding the domain of each team member",
-    ]
-
-    def __init__(self, agent) -> None:  # type: ignore
+    def __init__(self, agent: ChatAgent, config: Dict[str, Any]) -> None:
         """Initialize the router agent.
 
         Args:
             agent: The ChatAgent instance.
+            config: Configuration dictionary for the agent.
         """
-        super().__init__(agent)
+        super().__init__(agent, config)
         self.team_agents: Dict[str, BaseAgent] = {}
 
     def set_team_agents(self, agents: Dict[str, BaseAgent]) -> None:
@@ -98,120 +80,98 @@ class RouterAgent(BaseAgent):
             ]
         )
 
-        # Dynamically build team members description from team agents
-        team_members_description = self._build_team_members_description()
+        # Dynamically build team member descriptions from team_agents
+        team_description = self._build_team_description()
 
-        prompt = (
-            "You are a message router. Analyze the conversation and determine "
-            "which specialized team members should respond. Only recommend "
-            "specialists when truly needed - the assistant is the default fallback "
-            "for all other cases.\n\n"
-            "Team Members and Their Expertise:\n"
-            f"{team_members_description}\n\n"
-            "ROUTING GUIDELINES:\n"
-            "- TECHNICAL (architecture, design, tech stacks, language viability) "
-            "→ architect\n"
-            "- MARKET/STRATEGY (competitive analysis, growth, positioning) "
-            "→ strategy\n"
-            "- PRODUCT/REQUIREMENTS (features, roadmaps, specifications) → analyst\n"
-            "- IMPLEMENTATION/CODE (coding, building, solutions) → builder\n"
-            "- QUALITY/REVIEW (testing, validation, QA) → reviewer\n\n"
-            "FALLBACK TO ASSISTANT:\n"
-            "Return empty agents list for: greetings, general questions, or anything "
-            "that doesn't require a specialist. The assistant will automatically handle "
-            "as fallback.\n\n"
-            f"Recent Conversation:\n{context}\n\n"
-            "DECISION RULES:\n"
-            "1. Only recommend specialists for their specific domains\n"
-            "2. For multi-domain questions, recommend all relevant specialists\n"
-            "3. If question doesn't fit specialist domains, return empty list "
-            "(assistant is fallback)\n"
-            "4. Return empty list for: greetings, small talk, general knowledge\n\n"
-            "Return ONLY a JSON object:\n"
-            '{"agents": ["key1", "key2"], "reasoning": "brief explanation"}\n\n'
-            "Examples:\n"
-            '- "Is C# obsolete?" → {"agents": ["architect"], '
-            '"reasoning": "Technical question about language viability"}\n'
-            '- "What\'s our competitive advantage?" → {"agents": ["strategy"], '
-            '"reasoning": "Market and competitive positioning"}\n'
-            '- "Hello, how are you?" → {"agents": [], '
-            '"reasoning": "Greeting - assistant will handle as fallback"}\n'
-            '- "What\'s the weather?" → {"agents": [], '
-            '"reasoning": "General knowledge - assistant will handle as fallback"}\n\n'
-            "Return ONLY valid JSON, no other text."
-        )
-        return prompt
+        routing_instructions = f"""You are a message router for a business team. Analyze the conversation
+and determine which team members should respond next.
 
-    def _build_team_members_description(self) -> str:
-        """Build team members description from actual team agents.
+TEAM MEMBERS:
+{team_description}
+
+CONVERSATION CONTEXT:
+{context}
+
+Based on the conversation, which team members should respond? Return ONLY a JSON object with this format:
+{{"agent_keys": ["key1", "key2"]}}
+
+Rules:
+- Return only agent keys that are relevant to the message
+- Multiple agents can respond for multidisciplinary questions
+- If unsure, default to 'assistant'
+- Return empty array if you're really unsure"""
+
+        return routing_instructions
+
+    def _build_team_description(self) -> str:
+        """Build dynamic team description from team agents.
 
         Returns:
-            Formatted string describing all team members and their expertise.
+            str: Formatted team member descriptions.
         """
         descriptions = []
+        for key, agent in self.team_agents.items():
+            desc = f"- {agent.name} ({agent.role_title}, key='{key}'): "
+            if agent.focus_areas:
+                desc += ", ".join(agent.focus_areas[:2])
+            descriptions.append(desc)
 
-        for agent_key, agent in self.team_agents.items():
-            # Skip the router itself
-            if agent_key == "router":
-                continue
+        return "\n".join(descriptions)
 
-            # Get agent details
-            agent_name = agent.name or agent_key
-            agent_role = agent.role_title
-            agent_focus = agent.focus_areas
-
-            # Build focus areas string
-            focus_text = ", ".join(agent_focus) if agent_focus else "General support"
-
-            # Format the description
-            description = f"- {agent_key} ({agent_name}): {agent_role} - {focus_text}"
-            descriptions.append(description)
-
-        return (
-            "\n".join(descriptions) if descriptions else "- assistant: General support"
-        )
-
-    def _extract_response_text(self, response: object) -> str:
+    @staticmethod
+    def _extract_response_text(response: Any) -> str:
         """Extract text from agent response.
 
         Args:
             response: Agent response object.
 
         Returns:
-            Extracted text content.
+            str: Extracted text content.
         """
         response_text = ""
         if hasattr(response, "messages") and response.messages:
             for msg in response.messages:
                 if hasattr(msg, "text") and msg.text:
-                    response_text += msg.text + " "
+                    response_text += msg.text
         return response_text.strip()
 
-    def _parse_agent_recommendations(self, response_text: str) -> List[str]:
-        """Parse agent recommendations from response.
-
-        Validates recommendations against actual team agents.
+    @staticmethod
+    def _parse_agent_recommendations(response_text: str) -> List[str]:
+        """Parse agent recommendations from LLM response.
 
         Args:
-            response_text: Text response containing JSON recommendations.
+            response_text: Response text from the router LLM.
 
         Returns:
-            List of agent keys to respond.
+            List of agent keys recommended.
         """
         try:
-            # Try to extract JSON from the response
-            import re
-
-            json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(0)
+            # Try to extract JSON from response
+            json_start = response_text.find("{")
+            json_end = response_text.rfind("}") + 1
+            if json_start != -1 and json_end > json_start:
+                json_str = response_text[json_start:json_end]
                 data = json.loads(json_str)
-                agents = data.get("agents", [])
-                # Validate against actual team agents
-                valid_agent_keys = set(self.team_agents.keys())
-                valid_agents = [agent for agent in agents if agent in valid_agent_keys]
-                return valid_agents
-        except (json.JSONDecodeError, AttributeError):
+                agent_keys = data.get("agent_keys", [])
+                if isinstance(agent_keys, list):
+                    return agent_keys
+        except (json.JSONDecodeError, ValueError):
             pass
 
-        return []
+        # Fallback: check if response mentions agent names
+        agent_keys = []
+        response_lower = response_text.lower()
+        agent_name_map = {
+            "claire": "strategy",
+            "marc": "architect",
+            "sophie": "analyst",
+            "hugo": "builder",
+            "nina": "reviewer",
+            "emma": "assistant",
+        }
+
+        for name, key in agent_name_map.items():
+            if name in response_lower:
+                agent_keys.append(key)
+
+        return agent_keys if agent_keys else ["assistant"]

@@ -1,9 +1,8 @@
 """Base team agent class with shared properties and methods."""
 
-import abc
 import os
 from dataclasses import dataclass
-from typing import Union
+from typing import Any, Dict, Union
 from agent_framework import ChatAgent, Executor
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.openai import OpenAIChatClient
@@ -22,8 +21,8 @@ class AgentMetadata:
     model_name: str
 
 
-class BaseAgent(Executor, abc.ABC):
-    """Base agent with shared metadata."""
+class BaseAgent(Executor):
+    """Configurable agent with properties driven by config dict."""
 
     # Team mission (shared across all agents)
     TEAM_MISSION: str = (
@@ -33,67 +32,95 @@ class BaseAgent(Executor, abc.ABC):
         "only on the most important points."
     )
 
-    key: str = ""
-    name: str = ""
-    gender: str = ""
-    role_title: str = ""
-    avatar_url: str = ""
-    model_name: str = ""
-    tools: list = []
-    personality: str = ""
-    focus_areas: list[str] = []
-    role_description: str = ""  # Override in subclasses for specific role instructions
+    def __init__(self, agent: ChatAgent, config: Dict[str, Any]):
+        """Initialize agent with ChatAgent and configuration dict.
 
-    agent: ChatAgent
-
-    def __init__(self, agent: ChatAgent):
+        Args:
+            agent: The ChatAgent instance.
+            config: Configuration dictionary containing agent properties.
+        """
         self.agent = agent
+        self.config = config
+
+        # Set properties from config
+        self.key = config.get("key", "")
+        self.name = config.get("name", "")
+        self.gender = config.get("gender", "")
+        self.role_title = config.get("role_title", "")
+        self.avatar_url = config.get("avatar_url", "")
+        self.model_name = config.get("model_name", "")
+        self.role_description = config.get("role_description", "")
+        self.personality = config.get("personality", "")
+        self.focus_areas = config.get("focus_areas", [])
+        self.tools = config.get("tools", [])
+
         self.id = self.key
 
     @classmethod
-    async def create(cls) -> "BaseAgent":
+    async def create(cls, config: Dict[str, Any]) -> "BaseAgent":
         """Factory method to create a fully initialized agent instance.
 
-        This handles ChatAgent creation and wrapping it in the team agent.
+        Args:
+            config: Configuration dictionary for the agent.
+
+        Returns:
+            BaseAgent: Initialized agent instance.
         """
         # Initialize model client
-        client = await cls._get_model_client()
-        instructions = cls.build_instructions()
+        model_name = config.get("model_name", "")
+        client = await cls._get_model_client(model_name)
+        instructions = cls._build_instructions_from_config(config)
+
+        # Resolve tools from tool names in config
+        tools = cls._resolve_tools(config.get("tools", []))
 
         # Create ChatAgent with or without tools
-        if cls.tools:
+        if tools:
             chat_agent = client.create_agent(
-                name=f"{cls.__name__}",
+                name=config.get("name", "Agent"),
                 instructions=instructions,
-                tools=cls.tools,
+                tools=tools,
             )
         else:
             chat_agent = client.create_agent(
-                name=f"{cls.__name__}",
+                name=config.get("name", "Agent"),
                 instructions=instructions,
             )
 
-        return cls(chat_agent)
+        return cls(chat_agent, config)
 
-    @classmethod
-    def metadata(cls) -> AgentMetadata:
+    def metadata(self) -> AgentMetadata:
+        """Return metadata for this agent.
+
+        Returns:
+            AgentMetadata: Agent metadata.
+        """
         return AgentMetadata(
-            key=cls.key,
-            name=cls.name,
-            gender=cls.gender,
-            role=cls.role_title,
-            avatar_url=cls.avatar_url,
-            model_name=cls.model_name,
+            key=self.key,
+            name=self.name,
+            gender=self.gender,
+            role=self.role_title,
+            avatar_url=self.avatar_url,
+            model_name=self.model_name,
         )
 
-    @classmethod
-    async def _get_model_client(cls) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:
-        """Initialize the model client based on configuration."""
+    @staticmethod
+    async def _get_model_client(
+        model_name: str = "",
+    ) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:
+        """Initialize the model client based on configuration.
+
+        Args:
+            model_name: Override model name from config. If empty, uses env var.
+
+        Returns:
+            Union[AzureOpenAIChatClient, OpenAIChatClient]: Initialized model client.
+        """
         model_endpoint = os.getenv(
             "MODEL_ENDPOINT", "https://models.github.ai/inference/"
         ).strip()
         model_name_env = os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
-        model_name = (cls.model_name or model_name_env).strip()
+        final_model_name = (model_name or model_name_env).strip()
         github_token = (os.getenv("GITHUB_TOKEN", "") or "").strip()
 
         if "models.github.ai" in model_endpoint or model_endpoint.startswith(
@@ -109,14 +136,14 @@ class BaseAgent(Executor, abc.ABC):
 
             openai_client: OpenAIChatClient = OpenAIChatClient(
                 base_url=model_endpoint,
-                model_id=model_name,
+                model_id=final_model_name,
                 api_key=github_token,
             )
             return openai_client
 
         credential = DefaultAzureCredential()
         endpoint = model_endpoint
-        deployment = model_name
+        deployment = final_model_name
 
         if not endpoint or endpoint.startswith("https://models"):
             raise ValueError(
@@ -137,26 +164,45 @@ class BaseAgent(Executor, abc.ABC):
         return client
 
     @classmethod
-    def build_instructions(cls) -> str:
-        """Build instructions dynamically from class properties."""
-        focus_text = "\n".join(
-            f"{i+1}. {area}" for i, area in enumerate(cls.focus_areas)
-        )
+    def _build_instructions_from_config(cls, config: Dict[str, Any]) -> str:
+        """Build instructions from config dictionary.
+
+        Args:
+            config: Configuration dictionary for the agent.
+
+        Returns:
+            str: Built instructions string.
+        """
+        name = config.get("name", "")
+        role_description = config.get("role_description", "")
+        personality = config.get("personality", "")
+        focus_areas = config.get("focus_areas", [])
+
+        focus_text = "\n".join(f"{i+1}. {area}" for i, area in enumerate(focus_areas))
 
         instructions = f"{cls.TEAM_MISSION}\n\n"
-        instructions += f"You are {cls.name}, {cls.role_description}\n\n"
-        instructions += f"PERSONALITY: {cls.personality}\n\n"
+        instructions += f"You are {name}, {role_description}\n\n"
+        instructions += f"PERSONALITY: {personality}\n\n"
         instructions += f"FOCUS AREAS:\n{focus_text}\n"
 
-        if cls.tools:
+        # Note: Tools are listed in the prompt, but actual tool objects are passed separately
+        tools_list = config.get("tools", [])
+        if tools_list:
             tools_text = "You have access to the following tools:\n"
-            for tool in cls.tools:
-                tool_name = getattr(tool, "name", str(tool))
-                tool_desc = getattr(tool, "description", "")
-                tools_text += f"- {tool_name}"
-                if tool_desc:
-                    tools_text += f": {tool_desc}"
-                tools_text += "\n"
+            # If tools are strings (tool names), just list them
+            if isinstance(tools_list, list) and len(tools_list) > 0:
+                if isinstance(tools_list[0], str):
+                    for tool_name in tools_list:
+                        tools_text += f"- {tool_name}\n"
+                else:
+                    # If they are objects, try to get name/description
+                    for tool in tools_list:
+                        tool_name = getattr(tool, "name", str(tool))
+                        tool_desc = getattr(tool, "description", "")
+                        tools_text += f"- {tool_name}"
+                        if tool_desc:
+                            tools_text += f": {tool_desc}"
+                        tools_text += "\n"
             tools_text += "\nUse these tools when needed."
             instructions += f"\n{tools_text}\n"
 
@@ -165,3 +211,27 @@ class BaseAgent(Executor, abc.ABC):
             "paragraphs)."
         )
         return instructions
+
+    @staticmethod
+    def _resolve_tools(tool_names):  # type: ignore
+        """Resolve tool names to actual tool objects.
+
+        Args:
+            tool_names: List of tool names or tool objects.
+
+        Returns:
+            list: Resolved tool objects.
+        """
+        from . import tools as tools_module
+
+        resolved_tools = []
+        for tool in tool_names:
+            # If it's already an object, keep it
+            if not isinstance(tool, str):
+                resolved_tools.append(tool)
+            else:
+                # Try to import the tool by name
+                if hasattr(tools_module, tool):
+                    tool_obj = getattr(tools_module, tool)
+                    resolved_tools.append(tool_obj)
+        return resolved_tools

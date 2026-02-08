@@ -1,19 +1,14 @@
 """VandaTeam class for managing the business team agents."""
 
 from dataclasses import asdict
-from typing import Dict, List, Any, Optional, Type
+from typing import Dict, List, Any, Optional
 
 from agent_framework import Role, ChatMessage
 
 from agents import (
     BaseAgent,
     AgentMetadata,
-    StrategyAgent,
-    TechnicalArchitectAgent,
-    BusinessAnalystAgent,
-    BuilderAgent,
-    ReviewerAgent,
-    AssistantAgent,
+    AgentLoader,
     RouterAgent,
 )
 
@@ -21,18 +16,7 @@ from agents import (
 class VandaTeam:
     """Manages the Vanda AI business team and agent interactions."""
 
-    AGENT_CLASSES: list[Type[BaseAgent]] = [
-        StrategyAgent,
-        TechnicalArchitectAgent,
-        BusinessAnalystAgent,
-        BuilderAgent,
-        ReviewerAgent,
-        AssistantAgent,
-    ]
-
-    ROUTER_CLASS: Type[BaseAgent] = RouterAgent
-
-    def __init__(self, agents: Dict[str, BaseAgent], router: "RouterAgent"):
+    def __init__(self, agents: Dict[str, BaseAgent], router: RouterAgent):
         """Initialize the team with a dictionary of agents.
 
         Args:
@@ -49,13 +33,16 @@ class VandaTeam:
         Returns:
             VandaTeam: Initialized team with all agents ready.
         """
-        agents = {}
-        for agent_class in cls.AGENT_CLASSES:
-            agents[agent_class.key] = await agent_class.create()
-        router = await cls.ROUTER_CLASS.create()
+        # Load all agents from YAML configuration
+        agents = await AgentLoader.load_all()
+
+        # Extract router from agents (it's loaded like any other agent)
+        router = agents.pop("router")
+
         # Configure router with team agents for dynamic routing
         router.set_team_agents(agents)  # type: ignore
-        return cls(agents, router)  # type: ignore
+
+        return cls(agents, router)  # type: ignore[arg-type]
 
     @staticmethod
     def extract_response_text(response: Any) -> str:
@@ -74,8 +61,7 @@ class VandaTeam:
                     response_text += msg.text + " "
         return response_text.strip()
 
-    @staticmethod
-    def create_agent_result(agent_key: str, response_text: str) -> Dict[str, Any]:
+    def create_agent_result(self, agent_key: str, response_text: str) -> Dict[str, Any]:
         """Create result dict for agent response.
 
         Args:
@@ -87,10 +73,11 @@ class VandaTeam:
         """
         estimated_tokens = max(1, len(response_text) // 4) if response_text else 0
         metadata: Optional[AgentMetadata] = None
-        for agent_class in VandaTeam.AGENT_CLASSES:
-            if agent_class.key == agent_key:
-                metadata = agent_class.metadata()
-                break
+
+        # Get metadata from the agent instance
+        if agent_key in self.agents:
+            metadata = self.agents[agent_key].metadata()
+
         label = agent_key
         if metadata:
             label = f"{metadata.name} ({metadata.role})"
