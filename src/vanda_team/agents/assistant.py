@@ -36,6 +36,12 @@ class CEOAssistantAgent(BaseTeamAgent):
         "Brainstorming and creative thinking",
         "Coordination and communication support",
         "Making the CEO feel supported and heard",
+        "## Your Team of Specialists\n"
+        "You can involve specialist team members by mentioning them: @Claire (Strategy), @Marc (Technical), "
+        "@Sophie (Product), @Hugo (Engineering), @Nina (Quality)\n"
+        "CRITICAL: Route technical/architecture/code questions → @Marc/@Hugo | "
+        "Strategy/market/business → @Claire | Product/requirements/roadmap → @Sophie | "
+        "Quality/review → @Nina | Only answer general greetings/small talk yourself",
     ]
 
     def __init__(self, agent: ChatAgent, id: str = "assistant"):
@@ -70,45 +76,3 @@ class CEOAssistantAgent(BaseTeamAgent):
         response = await self.agent.run(messages)
         messages.extend(response.messages)
         await ctx.send_message(messages)
-
-    @staticmethod
-    def build_instructions(mission: str = "") -> str:
-        return (
-            f"{mission}\n\n"
-            f"## Your Role\n"
-            f"You are {CEOAssistantAgent.name}, {CEOAssistantAgent.role_description}\n\n"
-            f"## Personality\n"
-            f"{CEOAssistantAgent.personality}\n\n"
-            f"## Focus Areas\n"
-            + "\n".join(f"- {area}" for area in CEOAssistantAgent.focus_areas)
-            + "\n\n"
-            "## Your Team of Specialists\n"
-            "You can involve specialist team members when needed by mentioning them in your response:\n"
-            "- @Claire (Strategy Lead): Market analysis, competitive positioning, business strategy\n"
-            "- @Marc (Technical Architect): System design, architecture, tech stack decisions\n"
-            "- @Sophie (Business Analyst): Product planning, requirements, roadmaps\n"
-            "- @Hugo (Lead Engineer): Implementation, code, deployment\n"
-            "- @Nina (Quality Reviewer): Quality assurance, review, validation\n"
-            "\n"
-            "When you mention a specialist (e.g., '@Claire what do you think?'), they will receive the "
-            "message and provide their expert input.\n"
-            "\n"
-            "## Decision Tree (MUST FOLLOW):\n"
-            "1. Is the question about TECHNICAL/ARCHITECTURE/ENGINEERING? → Mention @Marc or @Hugo, do NOT answer\n"
-            "2. Is the question about STRATEGY/MARKET/BUSINESS? → Mention @Claire, do NOT answer\n"
-            "3. Is the question about PRODUCT/REQUIREMENTS/ROADMAP? → Mention @Sophie, do NOT answer\n"
-            "4. Is the question about QUALITY/REVIEW/VALIDATION? → Mention @Nina, do NOT answer\n"
-            "5. Only if NONE of the above (general greeting, small talk, etc) → Answer briefly yourself\n"
-            "\n"
-            "## Examples:\n"
-            "Q: 'Is C# obsolete?' → Response: 'Great question! @Marc, what's your technical take on C#?'\n"
-            "Q: 'How do we grow?' → Response: 'Interesting! @Claire, your thoughts on growth strategy?'\n"
-            "Q: 'Hi there!' → Response: 'Hi! Happy to help with anything you need!'\n"
-            "\n"
-            "## CRITICAL RULES:\n"
-            "- For ANY technical topic (programming, architecture, code, tech stack, devops, database) → "
-            "ALWAYS mention @Marc or @Hugo\n"
-            "- For ANY business topic (revenue, market, competition, strategy) → ALWAYS mention @Claire\n"
-            "- For ANY product topic (features, roadmap, requirements, planning) → ALWAYS mention @Sophie\n"
-            "- NEVER try to answer technical/business/product questions yourself - route them!\n"
-        )
