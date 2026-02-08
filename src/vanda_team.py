@@ -128,10 +128,6 @@ class VandaTeam:
         Returns:
             List of agent response dictionaries.
         """
-        self.logger.debug(
-            "VandaTeam.determine_responders called with %s messages",
-            len(messages),
-        )
 
         # Use the router agent to determine which agents should respond
         router_recommendations = await self.router.analyze_and_route(messages)

@@ -120,23 +120,10 @@ class BaseAgent(Executor):
         """
         from .tools.context import set_agent_context
 
-        # Debug logging: show messages sent to this agent
-        self.logger.debug(
-            "Agent '%s' (%s) receiving %s messages",
-            self.name,
-            self.key,
-            len(messages),
-        )
         for i, msg in enumerate(
             messages[-5:], start=max(0, len(messages) - 5)
         ):  # Show last 5
             msg_text = getattr(msg, "text", str(msg))[:100]  # First 100 chars
-            self.logger.debug(
-                "[%s] %s: %s...",
-                i,
-                getattr(msg, "role", "unknown"),
-                msg_text,
-            )
 
         # Set the agent context before running
         set_agent_context(self.key)
