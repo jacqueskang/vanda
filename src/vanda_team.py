@@ -157,8 +157,8 @@ class VandaTeam:
         descriptions = []
         for key, agent in self.agents.items():
             desc = f"- {agent.name} ({agent.role_title}, key='{key}'): "
-            if agent.focus_areas:
-                desc += ", ".join(agent.focus_areas[:2])
+            if agent.role_description:
+                desc += agent.role_description
             descriptions.append(desc)
 
         return "\n".join(descriptions)
