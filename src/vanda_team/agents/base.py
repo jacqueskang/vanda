@@ -74,11 +74,7 @@ class BaseTeamAgent(Executor, abc.ABC):
             "MODEL_ENDPOINT", "https://models.github.ai/inference/"
         ).strip()
         model_name_env = os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
-        model_name = (
-            (cls.model_name.strip() if cls.model_name else "")
-            or (model_name_env if model_name_env else "openai/gpt-4o-mini")
-            or ""
-        ).strip()
+        model_name = (cls.model_name or model_name_env).strip()
         github_token = (os.getenv("GITHUB_TOKEN", "") or "").strip()
 
         if "models.github.ai" in model_endpoint or model_endpoint.startswith(
