@@ -1,12 +1,25 @@
 """Base team agent class with shared properties and methods."""
 
 import abc
-from typing import Union, Dict, Any, List
+from dataclasses import dataclass
+from typing import Union, List
 from agent_framework import ChatAgent, Executor
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.openai import OpenAIChatClient
 from vanda_team.model_client import get_model_client
 from agent_framework import ChatMessage
+
+
+@dataclass
+class AgentMetadata:
+    """Metadata for team agents."""
+
+    key: str
+    name: str
+    gender: str
+    role: str
+    avatar_url: str
+    model_name: str
 
 
 class BaseTeamAgent(Executor, abc.ABC):
@@ -43,15 +56,15 @@ class BaseTeamAgent(Executor, abc.ABC):
         pass
 
     @classmethod
-    def metadata(cls) -> Dict[str, Any]:
-        return {
-            "key": cls.key,
-            "name": cls.name,
-            "gender": cls.gender,
-            "role": cls.role_title,
-            "avatar_url": cls.avatar_url,
-            "model_name": cls.model_name,
-        }
+    def metadata(cls) -> AgentMetadata:
+        return AgentMetadata(
+            key=cls.key,
+            name=cls.name,
+            gender=cls.gender,
+            role=cls.role_title,
+            avatar_url=cls.avatar_url,
+            model_name=cls.model_name,
+        )
 
     @classmethod
     async def get_default_client(cls) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:

@@ -2,12 +2,13 @@
 
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 from agent_framework import Role, ChatMessage
 
 from vanda_team.agents import (
     AGENT_METADATA,
+    AgentMetadata,
     get_or_create_agents,
     CEOAssistantAgent,
     StrategyAgent,
@@ -40,17 +41,17 @@ def extract_response_text(response: Any) -> str:
 def create_agent_result(agent_key: str, response_text: str) -> Dict[str, Any]:
     """Create result dict for agent response."""
     estimated_tokens = max(1, len(response_text) // 4) if response_text else 0
-    metadata = AGENT_METADATA.get(agent_key, {})
+    metadata: Optional[AgentMetadata] = AGENT_METADATA.get(agent_key, None)
     label = agent_key
     if metadata:
-        label = f"{metadata.get('name', agent_key)} ({metadata.get('role', agent_key)})"
+        label = f"{metadata.name} ({metadata.role})"
 
     return {
         "output": response_text or "Request processed",
         "agent": agent_key,
         "agent_label": label,
         "agent_meta": metadata,
-        "agent_avatar": metadata.get("avatar_url"),
+        "agent_avatar": metadata.avatar_url if metadata else None,
         "tokens_estimated": estimated_tokens,
         "status": "complete",
     }
@@ -197,11 +198,11 @@ async def main() -> None:
             """Return list of available agents."""
             agents_list = [
                 {
-                    "key": meta["key"],
-                    "name": meta["name"],
-                    "role": meta["role"],
-                    "avatar": meta["avatar_url"],
-                    "description": meta.get("description", ""),
+                    "key": meta.key,
+                    "name": meta.name,
+                    "role": meta.role,
+                    "avatar": meta.avatar_url,
+                    "description": "",
                 }
                 for meta in AGENT_METADATA.values()
             ]

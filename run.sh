@@ -9,5 +9,4 @@ if [[ ! -f "$VENV_PYTHON" ]]; then
   exit 1
 fi
 
-./build.sh
 "$VENV_PYTHON" scripts/run.py

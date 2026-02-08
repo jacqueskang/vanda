@@ -1,7 +1,7 @@
 """CEO Assistant Agent: personal assistant to the CEO."""
 
 import os
-from typing import List, Dict, Any
+from typing import List
 
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
@@ -70,16 +70,6 @@ class CEOAssistantAgent(BaseTeamAgent):
         response = await self.agent.run(messages)
         messages.extend(response.messages)
         await ctx.send_message(messages)
-
-    @staticmethod
-    def metadata() -> Dict[str, Any]:
-        return {
-            "key": CEOAssistantAgent.key,
-            "name": CEOAssistantAgent.name,
-            "role": CEOAssistantAgent.role_title,
-            "avatar_url": CEOAssistantAgent.avatar_url,
-            "description": f"{CEOAssistantAgent.name} is {CEOAssistantAgent.role_description}",
-        }
 
     @staticmethod
     def build_instructions(mission: str = "") -> str:

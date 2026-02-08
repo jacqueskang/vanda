@@ -6,12 +6,12 @@ from agent_framework import ChatAgent, WorkflowBuilder
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
 from .assistant import CEOAssistantAgent
-from .base import BaseTeamAgent
+from .base import BaseTeamAgent, AgentMetadata
 from .builder import BuilderAgent
 from .reviewer import ReviewerAgent
 from .strategy import StrategyAgent
 
-AGENT_METADATA = {
+AGENT_METADATA: Dict[str, AgentMetadata] = {
     StrategyAgent.key: StrategyAgent.metadata(),
     TechnicalArchitectAgent.key: TechnicalArchitectAgent.metadata(),
     BusinessAnalystAgent.key: BusinessAnalystAgent.metadata(),
@@ -97,6 +97,7 @@ async def get_or_create_workflow() -> Any:
 
 __all__ = [
     "BaseTeamAgent",
+    "AgentMetadata",
     "StrategyAgent",
     "TechnicalArchitectAgent",
     "BusinessAnalystAgent",
