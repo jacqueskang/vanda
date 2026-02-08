@@ -29,10 +29,6 @@ class VandaTeam:
         AssistantAgent,
     ]
 
-    AGENT_METADATA: Dict[str, AgentMetadata] = {
-        agent_class.key: agent_class.metadata() for agent_class in AGENT_CLASSES
-    }
-
     def __init__(self, agents: Dict[str, BaseAgent]):
         """Initialize the team with a dictionary of agents.
 
@@ -82,9 +78,11 @@ class VandaTeam:
             Dict containing formatted agent response data.
         """
         estimated_tokens = max(1, len(response_text) // 4) if response_text else 0
-        metadata: Optional[AgentMetadata] = VandaTeam.AGENT_METADATA.get(
-            agent_key, None
-        )
+        metadata: Optional[AgentMetadata] = None
+        for agent_class in VandaTeam.AGENT_CLASSES:
+            if agent_class.key == agent_key:
+                metadata = agent_class.metadata()
+                break
         label = agent_key
         if metadata:
             label = f"{metadata.name} ({metadata.role})"
@@ -158,8 +156,7 @@ class VandaTeam:
 
         return active_results
 
-    @staticmethod
-    def get_agents_list() -> List[Dict[str, Any]]:
+    def get_agents_list(self) -> List[Dict[str, Any]]:
         """Get list of available agents with their metadata.
 
         Returns:
@@ -167,11 +164,11 @@ class VandaTeam:
         """
         return [
             {
-                "key": meta.key,
-                "name": meta.name,
-                "role": meta.role,
-                "avatar": meta.avatar_url,
+                "key": key,
+                "name": agent.name,
+                "role": agent.role_title,
+                "avatar": agent.avatar_url,
                 "description": "",
             }
-            for meta in VandaTeam.AGENT_METADATA.values()
+            for key, agent in self.agents.items()
         ]
