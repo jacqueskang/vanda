@@ -1,15 +1,37 @@
 """VandaTeam class for managing the business team agents."""
 
 from dataclasses import asdict
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Type
 
 from agent_framework import Role, ChatMessage
 
-from agents import AGENT_METADATA, AgentMetadata, create_all_team_agents, BaseAgent
+from agents import (
+    BaseAgent,
+    AgentMetadata,
+    StrategyAgent,
+    TechnicalArchitectAgent,
+    BusinessAnalystAgent,
+    BuilderAgent,
+    ReviewerAgent,
+    CEOAssistantAgent,
+)
 
 
 class VandaTeam:
     """Manages the Vanda AI business team and agent interactions."""
+
+    AGENT_CLASSES: list[Type[BaseAgent]] = [
+        StrategyAgent,
+        TechnicalArchitectAgent,
+        BusinessAnalystAgent,
+        BuilderAgent,
+        ReviewerAgent,
+        CEOAssistantAgent,
+    ]
+
+    AGENT_METADATA: Dict[str, AgentMetadata] = {
+        agent_class.key: agent_class.metadata() for agent_class in AGENT_CLASSES
+    }
 
     def __init__(self, agents: Dict[str, BaseAgent]):
         """Initialize the team with a dictionary of agents.
@@ -26,7 +48,9 @@ class VandaTeam:
         Returns:
             VandaTeam: Initialized team with all agents ready.
         """
-        agents = await create_all_team_agents()
+        agents = {}
+        for agent_class in cls.AGENT_CLASSES:
+            agents[agent_class.key] = await agent_class.create()
         return cls(agents)
 
     @staticmethod
@@ -58,7 +82,9 @@ class VandaTeam:
             Dict containing formatted agent response data.
         """
         estimated_tokens = max(1, len(response_text) // 4) if response_text else 0
-        metadata: Optional[AgentMetadata] = AGENT_METADATA.get(agent_key, None)
+        metadata: Optional[AgentMetadata] = VandaTeam.AGENT_METADATA.get(
+            agent_key, None
+        )
         label = agent_key
         if metadata:
             label = f"{metadata.name} ({metadata.role})"
@@ -147,5 +173,5 @@ class VandaTeam:
                 "avatar": meta.avatar_url,
                 "description": "",
             }
-            for meta in AGENT_METADATA.values()
+            for meta in VandaTeam.AGENT_METADATA.values()
         ]
