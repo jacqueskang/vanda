@@ -1,9 +1,6 @@
 """CEO Assistant Agent: personal assistant to the CEO."""
 
 import os
-from typing import List
-
-from agent_framework import ChatMessage, WorkflowContext, handler
 
 from .base import BaseAgent
 
@@ -43,18 +40,3 @@ class AssistantAgent(BaseAgent):
         "Strategy/market/business → @Claire | Product/requirements/roadmap → @Sophie | "
         "Quality/review → @Nina | Only answer general greetings/small talk yourself",
     ]
-
-    def should_respond(self, messages: List[ChatMessage]) -> bool:
-        """Assistant does not respond based on should_respond logic.
-
-        The router agent handles all routing decisions.
-        """
-        return False
-
-    @handler
-    async def handle_business_inquiry(
-        self, messages: list[ChatMessage], ctx: WorkflowContext[list[ChatMessage]]
-    ) -> None:
-        response = await self.agent.run(messages)
-        messages.extend(response.messages)
-        await ctx.send_message(messages)

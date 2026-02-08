@@ -1,7 +1,5 @@
 """Business Analyst Agent: product planning and requirements."""
 
-from agent_framework import ChatMessage, WorkflowContext, handler
-
 from .base import BaseAgent
 
 
@@ -34,11 +32,3 @@ class BusinessAnalystAgent(BaseAgent):
         "Success metrics and KPIs",
         "User stories and acceptance criteria",
     ]
-
-    @handler
-    async def handle_analysis(
-        self, messages: list[ChatMessage], ctx: WorkflowContext[list[ChatMessage]]
-    ) -> None:
-        response = await self.agent.run(messages)
-        messages.extend(response.messages)
-        await ctx.send_message(messages)

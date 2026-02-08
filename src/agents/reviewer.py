@@ -1,9 +1,5 @@
 """Reviewer Agent: quality assurance and final summary."""
 
-from typing import Never
-
-from agent_framework import ChatMessage, WorkflowContext, handler
-
 from .base import BaseAgent
 
 
@@ -35,14 +31,3 @@ class ReviewerAgent(BaseAgent):
         "Validating assumptions and fact-checking",
         "Producing a clean executive summary",
     ]
-
-    @handler
-    async def handle_review(
-        self, messages: list[ChatMessage], ctx: WorkflowContext[Never, str]
-    ) -> None:
-        response = await self.agent.run(messages)
-        if response.messages:
-            final_content = response.messages[-1].contents[-1]
-            if hasattr(final_content, "text") and getattr(final_content, "text", None):
-                final_text = getattr(final_content, "text")
-                await ctx.yield_output(final_text)

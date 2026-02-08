@@ -3,12 +3,11 @@
 import abc
 import os
 from dataclasses import dataclass
-from typing import Union, List
+from typing import Union
 from agent_framework import ChatAgent, Executor
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.openai import OpenAIChatClient
 from azure.identity.aio import DefaultAzureCredential
-from agent_framework import ChatMessage
 
 
 @dataclass
@@ -75,13 +74,6 @@ class BaseAgent(Executor, abc.ABC):
             )
 
         return cls(chat_agent)
-
-    def should_respond(self, messages: List[ChatMessage]) -> bool:
-        """Determine if this agent should respond based on message content.
-
-        Default implementation returns False. Override in subclasses for custom logic.
-        """
-        return False
 
     @classmethod
     def metadata(cls) -> AgentMetadata:

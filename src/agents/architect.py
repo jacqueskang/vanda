@@ -1,7 +1,5 @@
 """Technical Architect Agent: system design and architecture."""
 
-from agent_framework import ChatMessage, WorkflowContext, handler
-
 from .base import BaseAgent
 
 
@@ -34,11 +32,3 @@ class TechnicalArchitectAgent(BaseAgent):
         "Scalability and reliability strategies",
         "Integration with AI frameworks (agent-framework, LangChain, etc.)",
     ]
-
-    @handler
-    async def handle_technical_task(
-        self, messages: list[ChatMessage], ctx: WorkflowContext[list[ChatMessage]]
-    ) -> None:
-        response = await self.agent.run(messages)
-        messages.extend(response.messages)
-        await ctx.send_message(messages)

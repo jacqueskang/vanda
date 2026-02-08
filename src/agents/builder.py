@@ -1,7 +1,5 @@
 """Builder Agent: implementation and code generation."""
 
-from agent_framework import ChatMessage, WorkflowContext, handler
-
 from .base import BaseAgent
 
 
@@ -34,11 +32,3 @@ class BuilderAgent(BaseAgent):
         "Deployment strategies",
         "Security and performance considerations",
     ]
-
-    @handler
-    async def handle_implementation(
-        self, messages: list[ChatMessage], ctx: WorkflowContext[list[ChatMessage]]
-    ) -> None:
-        response = await self.agent.run(messages)
-        messages.extend(response.messages)
-        await ctx.send_message(messages)

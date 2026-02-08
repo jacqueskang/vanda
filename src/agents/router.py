@@ -215,7 +215,3 @@ class RouterAgent(BaseAgent):
             pass
 
         return []
-
-    def should_respond(self, messages: List[ChatMessage]) -> bool:
-        """Router agent does not respond to messages directly."""
-        return False

@@ -1,7 +1,5 @@
 """Strategy Agent: business strategy and market analysis."""
 
-from agent_framework import ChatMessage, WorkflowContext, handler
-
 from .base import BaseAgent
 from .tools.web_search import web_search
 from .tools.wikipedia_lookup import wikipedia_lookup
@@ -38,11 +36,3 @@ class StrategyAgent(BaseAgent):
         "Monetization models (commission, subscription, etc.)",
         "Regulatory challenges and risk mitigation",
     ]
-
-    @handler
-    async def handle_business_inquiry(
-        self, messages: list[ChatMessage], ctx: WorkflowContext[list[ChatMessage]]
-    ) -> None:
-        response = await self.agent.run(messages)
-        messages.extend(response.messages)
-        await ctx.send_message(messages)
