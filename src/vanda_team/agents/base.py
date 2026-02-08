@@ -1,13 +1,15 @@
 """Base team agent class with shared properties and methods."""
 
 import abc
+from typing import Union, List
 from agent_framework import ChatAgent
+from agent_framework.azure import AzureOpenAIChatClient
+from agent_framework.openai import OpenAIChatClient
 from vanda_team.model_client import get_model_client
-from typing import List
 from agent_framework import ChatMessage
 
 
-class BaseTeamAgent(Executor, abc.ABC):
+class BaseTeamAgent(abc.ABC):
     """Base agent with shared metadata."""
 
     # Team mission (shared across all agents)
@@ -52,7 +54,7 @@ class BaseTeamAgent(Executor, abc.ABC):
         }
 
     @classmethod
-    async def get_default_client(cls) -> ChatAgent:
+    async def get_default_client(cls) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:
         """Get the default model client."""
         return await get_model_client()
 
