@@ -9,13 +9,7 @@ from agent_framework import Role, ChatMessage
 from vanda_team.agents import (
     AGENT_METADATA,
     AgentMetadata,
-    get_or_create_agents,
-    CEOAssistantAgent,
-    StrategyAgent,
-    TechnicalArchitectAgent,
-    BusinessAnalystAgent,
-    BuilderAgent,
-    ReviewerAgent,
+    create_all_team_agents,
 )
 
 # Constants
@@ -117,17 +111,7 @@ async def main() -> None:
         print("=" * 60)
         print("\n[+] Initializing agents...")
 
-        agents = await get_or_create_agents()
-
-        # Create custom agent instances
-        custom_agents = {
-            "assistant": CEOAssistantAgent(agents["assistant"]),
-            "strategy": StrategyAgent(agents["strategy"]),
-            "architect": TechnicalArchitectAgent(agents["architect"]),
-            "analyst": BusinessAnalystAgent(agents["analyst"]),
-            "builder": BuilderAgent(agents["builder"]),
-            "reviewer": ReviewerAgent(agents["reviewer"]),
-        }
+        agents = await create_all_team_agents()
 
         root_dir = Path(__file__).resolve().parents[2]
         ui_file = root_dir / "web" / "web_ui.html"
@@ -161,9 +145,7 @@ async def main() -> None:
                         chat_messages.append(msg)
 
                 # Determine and run responders
-                active_results = await determine_responders(
-                    chat_messages, custom_agents
-                )
+                active_results = await determine_responders(chat_messages, agents)
 
                 # Return single or multiple responses
 

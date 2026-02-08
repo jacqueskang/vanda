@@ -1,6 +1,6 @@
 """AI Business Team - Multi-agent coordinator system."""
 
-from typing import Dict, Any
+from typing import Dict, Optional
 from agent_framework import ChatAgent, WorkflowBuilder
 
 from .analyst import BusinessAnalystAgent
@@ -20,25 +20,25 @@ AGENT_METADATA: Dict[str, AgentMetadata] = {
     CEOAssistantAgent.key: CEOAssistantAgent.metadata(),
 }
 
-_workflow_cache = None
-_agents_cache = None
+_team_agents_cache: Optional[Dict[str, BaseTeamAgent]] = None
+_workflow_cache: Optional[object] = None
 
 
-async def get_or_create_agents() -> Dict[str, ChatAgent]:
-    """Get or create the agent map (cached for performance)."""
-    global _agents_cache
+async def create_all_team_agents() -> Dict[str, BaseTeamAgent]:
+    """Create fully initialized team agent instances (cached for performance)."""
+    global _team_agents_cache
 
-    if _agents_cache is not None:
-        return _agents_cache  # type: ignore
+    if _team_agents_cache is not None:
+        return _team_agents_cache
 
-    strategy_agent = await StrategyAgent.create_agent()
-    architect_agent = await TechnicalArchitectAgent.create_agent()
-    analyst_agent = await BusinessAnalystAgent.create_agent()
-    builder_agent = await BuilderAgent.create_agent()
-    reviewer_agent = await ReviewerAgent.create_agent()
-    assistant_agent = await CEOAssistantAgent.create_agent()
+    strategy_agent = await StrategyAgent.create()
+    architect_agent = await TechnicalArchitectAgent.create()
+    analyst_agent = await BusinessAnalystAgent.create()
+    builder_agent = await BuilderAgent.create()
+    reviewer_agent = await ReviewerAgent.create()
+    assistant_agent = await CEOAssistantAgent.create()
 
-    _agents_cache = {
+    _team_agents_cache = {
         "strategy": strategy_agent,
         "architect": architect_agent,
         "analyst": analyst_agent,
@@ -47,37 +47,41 @@ async def get_or_create_agents() -> Dict[str, ChatAgent]:
         "assistant": assistant_agent,
     }
 
-    return _agents_cache
+    return _team_agents_cache
 
 
-async def get_or_create_workflow() -> Any:
+async def get_or_create_agents() -> Dict[str, ChatAgent]:
+    """Get or create the agent map (cached for performance).
+
+    Deprecated: Use create_all_team_agents() instead for the new unified approach.
+    This function remains for backward compatibility.
+    """
+    team_agents = await create_all_team_agents()
+    return {k: v.agent for k, v in team_agents.items()}
+
+
+async def get_or_create_workflow() -> object:
     """Get or create the multi-agent workflow (cached for performance)."""
     global _workflow_cache
 
     if _workflow_cache is not None:
-        return _workflow_cache  # type: ignore
+        return _workflow_cache
 
     print("[*] Initializing AI agent team...")
 
     print("[*] Creating specialized agents...")
 
-    strategy_agent = await StrategyAgent.create_agent()
+    strategy = await StrategyAgent.create()
 
-    architect_agent = await TechnicalArchitectAgent.create_agent()
+    architect = await TechnicalArchitectAgent.create()
 
-    analyst_agent = await BusinessAnalystAgent.create_agent()
+    analyst = await BusinessAnalystAgent.create()
 
-    builder_agent = await BuilderAgent.create_agent()
+    builder = await BuilderAgent.create()
 
-    reviewer_agent = await ReviewerAgent.create_agent()
+    reviewer = await ReviewerAgent.create()
 
     print("[-] Building multi-agent workflow...")
-
-    strategy = StrategyAgent(strategy_agent)
-    architect = TechnicalArchitectAgent(architect_agent)
-    analyst = BusinessAnalystAgent(analyst_agent)
-    builder = BuilderAgent(builder_agent)
-    reviewer = ReviewerAgent(reviewer_agent)
 
     workflow = (
         WorkflowBuilder()
@@ -104,6 +108,7 @@ __all__ = [
     "BuilderAgent",
     "ReviewerAgent",
     "CEOAssistantAgent",
+    "create_all_team_agents",
     "get_or_create_workflow",
     "get_or_create_agents",
     "AGENT_METADATA",

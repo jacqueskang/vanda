@@ -51,6 +51,15 @@ class BaseTeamAgent(Executor, abc.ABC):
         self.agent = agent
         self.id = self.key
 
+    @classmethod
+    async def create(cls) -> "BaseTeamAgent":
+        """Factory method to create a fully initialized agent instance.
+
+        This handles both ChatAgent creation and wrapping it in the team agent.
+        """
+        chat_agent = await cls.create_agent()
+        return cls(chat_agent)
+
     @abc.abstractmethod
     def should_respond(self, messages: List[ChatMessage]) -> bool:
         """Determine if this agent should respond based on message content."""
