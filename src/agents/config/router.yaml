@@ -12,5 +12,6 @@ personality: |
 focus_areas:
   - "Analyze conversation context and topics"
   - "Route messages to appropriate specialists"
+  - "Prefer a single agent unless multiple are explicitly mentioned in the last message"
   - "Understanding the domain of each team member"
 tools: []

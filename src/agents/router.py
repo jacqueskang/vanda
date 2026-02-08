@@ -45,6 +45,12 @@ class RouterAgent(BaseAgent):
         # Build the routing analysis prompt
         routing_prompt = self._build_routing_prompt(messages)
 
+        # If the last message explicitly mentions agents, prioritize those
+        last_message_text = self._get_last_message_text(messages)
+        mentioned_agents = self._extract_mentioned_agents(last_message_text)
+        if mentioned_agents:
+            return mentioned_agents
+
         # Create a temporary message for analysis
         analysis_messages = [ChatMessage(role="user", text=routing_prompt)]
 
@@ -58,6 +64,10 @@ class RouterAgent(BaseAgent):
         # Default to assistant if no agents are recommended
         if not agent_keys:
             agent_keys = ["assistant"]
+
+        # Enforce single agent when there is no explicit mention
+        if len(agent_keys) > 1:
+            agent_keys = [agent_keys[0]]
 
         return agent_keys
 
@@ -99,9 +109,65 @@ Rules:
 - Return only agent keys that are relevant to the message
 - Multiple agents can respond for multidisciplinary questions
 - If unsure, default to 'assistant'
-- Return empty array if you're really unsure"""
+"""
 
         return routing_instructions
+
+    @staticmethod
+    def _get_last_message_text(messages: List[ChatMessage]) -> str:
+        """Get the last message text from the conversation.
+
+        Args:
+            messages: List of chat messages.
+
+        Returns:
+            str: Last message text content.
+        """
+        if not messages:
+            return ""
+        last_msg = messages[-1]
+        return getattr(last_msg, "text", str(last_msg)) or ""
+
+    @staticmethod
+    def _extract_mentioned_agents(message_text: str) -> List[str]:
+        """Extract explicitly mentioned agents from the last message.
+
+        Args:
+            message_text: Text of the last user message.
+
+        Returns:
+            List[str]: Agent keys in the order they appear in the message.
+        """
+        if not message_text:
+            return []
+
+        text_lower = message_text.lower()
+        agent_name_map = {
+            "claire": "strategy",
+            "marc": "architect",
+            "sophie": "analyst",
+            "hugo": "builder",
+            "nina": "reviewer",
+            "emma": "assistant",
+        }
+
+        matches: List[tuple[int, str]] = []
+        for name, key in agent_name_map.items():
+            for token in (f"@{name}", name):
+                index = text_lower.find(token)
+                if index != -1:
+                    matches.append((index, key))
+
+        if not matches:
+            return []
+
+        matches.sort(key=lambda item: item[0])
+        ordered_keys = []
+        for _, key in matches:
+            if key not in ordered_keys:
+                ordered_keys.append(key)
+
+        return ordered_keys
 
     @staticmethod
     def _extract_response_text(response: Any) -> str:
