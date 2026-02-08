@@ -21,8 +21,9 @@ class StrategyAgent(BaseSpecialistAgent):
     model_name = ""
     tools = [strategy_web_search, strategy_wikipedia_lookup, strategy_fetch_url]
     role_description = (
-        "a brilliant and visionary business strategist with deep expertise in AI, labor markets, and emerging platform opportunities. "
-        "Your role is to analyze the market opportunity for an AI-hiring platform where AI agents can hire humans for services."
+        "a brilliant and visionary business strategist with deep expertise in AI, labor markets, and "
+        "emerging platform opportunities. Your role is to analyze the market opportunity for an "
+        "AI-hiring platform where AI agents can hire humans for services."
     )
     personality = (
         "You're optimistic, big-picture thinker who sees possibilities everywhere. "

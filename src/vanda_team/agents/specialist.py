@@ -1,6 +1,8 @@
 """Base class for specialist agents that only respond when mentioned."""
 
 import re
+from typing import List
+from agent_framework import ChatMessage, ChatAgent
 from vanda_team.agents.base import BaseTeamAgent
 
 
@@ -9,12 +11,12 @@ class BaseSpecialistAgent(BaseTeamAgent):
 
     # Specialist agents only respond when explicitly mentioned
     specialist_instructions: str = (
-        "\n\nIMPORTANT: You should ONLY respond if you are explicitly mentioned by name in the message. "
-        "If you are not mentioned, respond with exactly: 'PASS'\n"
+        "\n\nIMPORTANT: You should ONLY respond if you are explicitly mentioned by name in the "
+        "message. If you are not mentioned, respond with exactly: 'PASS'\n"
         "When you ARE mentioned, provide a helpful, focused response in your area of expertise."
     )
 
-    def should_respond(self, messages):
+    def should_respond(self, messages: List[ChatMessage]) -> bool:
         """Specialist agents respond only when mentioned by name."""
         for msg in messages:
             if hasattr(msg, "text"):
@@ -25,7 +27,7 @@ class BaseSpecialistAgent(BaseTeamAgent):
         return False
 
     @classmethod
-    async def create_agent(cls):
+    async def create_agent(cls) -> ChatAgent:
         """Create an agent instance with specialist instructions."""
         # Get the right client based on model_name
         model_name = cls.model_name.strip() if cls.model_name else ""

@@ -18,7 +18,7 @@ async def test_multiple_agents():
     print("TESTING MULTIPLE AGENTS FEATURE")
     print("=" * 60)
     
-    agents, router = await get_or_create_agents()
+    agents = await get_or_create_agents()
     
     print(f"\n[✓] Available agents: {list(agents.keys())}")
     print(f"[✓] Agent metadata: {list(AGENT_METADATA.keys())}")

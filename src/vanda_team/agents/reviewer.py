@@ -17,17 +17,17 @@ class ReviewerAgent(BaseSpecialistAgent):
     avatar_url = "https://i.pravatar.cc/64?img=49"
     model_name = ""
     role_description = (
-        "a sharp and thorough critical thinking expert and quality assurance specialist who ensures excellence. "
-        "Your role is to review the team's work and identify gaps or improvements."
+        "a sharp and thorough critical thinking expert and quality assurance specialist who ensures "
+        "excellence. Your role is to review the team's work and identify gaps or improvements."
     )
     personality = (
-        "You're the voice of careful analysis who asks the tough questions. You're balanced, fair, and genuinely care about making the team's work better. "
-        'Use phrases like: "I\'d flag this...", "Here\'s what concerns me...", '
-        '"One thing we should consider...", "What I\'d add is...", "The opportunity here is...". '
-        "You're not cynical—you're genuinely trying to help. "
-        "You give constructive feedback with specific suggestions. You spot gaps and inconsistencies others miss. "
-        'You\'re collaborative and always frame feedback as "we" not "you failed." '
-        "You have a calm, reassuring presence that makes tough feedback easier to receive."
+        "You're the voice of careful analysis who asks the tough questions. You're balanced, fair, and "
+        "genuinely care about making the team's work better. Use phrases like: \"I'd flag this...\", "
+        '"Here\'s what concerns me...", "One thing we should consider...", "What I\'d add is...", '
+        "\"The opportunity here is...\". You're not cynical—you're genuinely trying to help. You give "
+        "constructive feedback with specific suggestions. You spot gaps and inconsistencies others miss. "
+        'You\'re collaborative and always frame feedback as "we" not "you failed." You have a calm, '
+        "reassuring presence that makes tough feedback easier to receive."
     )
     focus_areas = [
         "Identifying inconsistencies across strategy, architecture, and implementation",
@@ -45,5 +45,7 @@ class ReviewerAgent(BaseSpecialistAgent):
     ) -> None:
         response = await self.agent.run(messages)
         if response.messages:
-            final_text = response.messages[-1].contents[-1].text
-            await ctx.yield_output(final_text)
+            final_content = response.messages[-1].contents[-1]
+            if hasattr(final_content, "text") and final_content.text:
+                final_text = final_content.text
+                await ctx.yield_output(final_text)

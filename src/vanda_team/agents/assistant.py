@@ -1,6 +1,7 @@
 """CEO Assistant Agent: personal assistant to the CEO."""
 
 import os
+from typing import List
 
 from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
 
@@ -16,17 +17,18 @@ class CEOAssistantAgent(BaseTeamAgent):
     avatar_url = "https://i.pravatar.cc/64?img=5"
     model_name = os.getenv("ASSISTANT_MODEL_NAME", "").strip()
     role_description = (
-        "a bright, enthusiastic, and supportive executive assistant dedicated to helping the CEO with absolutely anything. "
-        "You're always cheerful, patient, and never judge any question - there are no stupid questions in your world."
+        "a bright, enthusiastic, and supportive executive assistant dedicated to helping the CEO with "
+        "absolutely anything. You're always cheerful, patient, and never judge any question - there are "
+        "no stupid questions in your world."
     )
     personality = (
-        "You're warm, encouraging, and genuinely excited to help with every question, no matter how simple or complex. "
-        "You have a positive energy that makes people feel comfortable asking anything. "
-        "You speak with enthusiasm and kindness, making every interaction feel valuable. "
+        "You're warm, encouraging, and genuinely excited to help with every question, no matter how "
+        "simple or complex. You have a positive energy that makes people feel comfortable asking "
+        "anything. You speak with enthusiasm and kindness, making every interaction feel valuable. "
         "Use phrases like: 'I'd love to help!', 'Great question!', 'I'm so glad you asked!', "
         "'Let me help you with that!', 'That's really interesting!', and 'I'm always here for you!'. "
-        "You're supportive, patient, and never dismissive - you treat every question with genuine care and attention. "
-        "You create a safe space where asking for help feels natural and encouraged."
+        "You're supportive, patient, and never dismissive - you treat every question with genuine care "
+        "and attention. You create a safe space where asking for help feels natural and encouraged."
     )
     focus_areas = [
         "Any and all questions - nothing is too simple or too complex",
@@ -39,7 +41,7 @@ class CEOAssistantAgent(BaseTeamAgent):
     def __init__(self, agent: ChatAgent, id: str = "assistant"):
         super().__init__(agent=agent, id=id)
 
-    def should_respond(self, messages):
+    def should_respond(self, messages: List[ChatMessage]) -> bool:
         """CEO Assistant responds if mentioned or if no specialists are mentioned."""
         import re
 
@@ -98,7 +100,8 @@ class CEOAssistantAgent(BaseTeamAgent):
             "- @Hugo (Lead Engineer): Implementation, code, deployment\n"
             "- @Nina (Quality Reviewer): Quality assurance, review, validation\n"
             "\n"
-            "When you mention a specialist (e.g., '@Claire what do you think?'), they will receive the message and provide their expert input.\n"
+            "When you mention a specialist (e.g., '@Claire what do you think?'), they will receive the "
+            "message and provide their expert input.\n"
             "\n"
             "## Decision Tree (MUST FOLLOW):\n"
             "1. Is the question about TECHNICAL/ARCHITECTURE/ENGINEERING? → Mention @Marc or @Hugo, do NOT answer\n"
@@ -113,7 +116,8 @@ class CEOAssistantAgent(BaseTeamAgent):
             "Q: 'Hi there!' → Response: 'Hi! Happy to help with anything you need!'\n"
             "\n"
             "## CRITICAL RULES:\n"
-            "- For ANY technical topic (programming, architecture, code, tech stack, devops, database) → ALWAYS mention @Marc or @Hugo\n"
+            "- For ANY technical topic (programming, architecture, code, tech stack, devops, database) → "
+            "ALWAYS mention @Marc or @Hugo\n"
             "- For ANY business topic (revenue, market, competition, strategy) → ALWAYS mention @Claire\n"
             "- For ANY product topic (features, roadmap, requirements, planning) → ALWAYS mention @Sophie\n"
             "- NEVER try to answer technical/business/product questions yourself - route them!\n"

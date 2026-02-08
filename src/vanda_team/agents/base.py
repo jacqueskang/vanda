@@ -1,9 +1,10 @@
 """Base team agent class with shared properties and methods."""
 
 import abc
-import re
-from agent_framework import ChatAgent, Executor
+from agent_framework import ChatAgent
 from vanda_team.model_client import get_model_client
+from typing import List
+from agent_framework import ChatMessage
 
 
 class BaseTeamAgent(Executor, abc.ABC):
@@ -12,9 +13,9 @@ class BaseTeamAgent(Executor, abc.ABC):
     # Team mission (shared across all agents)
     TEAM_MISSION: str = (
         "Mission: Build a profitable platform where AI agents can hire and manage human services. "
-        "Short-term market focus: France. Long-term market focus: worldwide. "
-        "Maximize revenue and sustainable unit economics. All guidance should align to this objective. "
-        "Be brief and focus only on the most important points."
+        "Short-term market focus: France. Long-term market focus: worldwide. Maximize revenue and "
+        "sustainable unit economics. All guidance should align to this objective. Be brief and focus "
+        "only on the most important points."
     )
 
     key: str = ""
@@ -35,7 +36,7 @@ class BaseTeamAgent(Executor, abc.ABC):
         super().__init__(id=id)
 
     @abc.abstractmethod
-    def should_respond(self, messages):
+    def should_respond(self, messages: List[ChatMessage]) -> bool:
         """Determine if this agent should respond based on message content."""
         pass
 
@@ -70,7 +71,10 @@ class BaseTeamAgent(Executor, abc.ABC):
         if tools_info:
             instructions += f"\n{tools_info}\n"
 
-        instructions += "\nKeep responses short and high-signal (3-6 bullets or 1-2 short paragraphs)."
+        instructions += (
+            "\nKeep responses short and high-signal (3-6 bullets or 1-2 short "
+        )
+        "paragraphs)."
         return instructions
 
     @classmethod
@@ -93,7 +97,10 @@ class BaseTeamAgent(Executor, abc.ABC):
         instructions += f"PERSONALITY: {cls.personality}\n\n"
         instructions += f"FOCUS AREAS:\n{focus_text}\n\n"
         instructions += tools_info
-        instructions += "\n\nKeep responses short and high-signal (3-6 bullets or 1-2 short paragraphs)."
+        instructions += (
+            "\n\nKeep responses short and high-signal (3-6 bullets or 1-2 short "
+        )
+        "paragraphs)."
         return instructions
 
     @classmethod

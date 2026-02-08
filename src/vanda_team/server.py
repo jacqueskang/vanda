@@ -60,7 +60,7 @@ async def run_agent_with_messages(
     agent_key: str, messages_for_agent: List[ChatMessage], agents: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Run an agent with given messages."""
-    response = await agents[agent_key].run(messages_for_agent)
+    response = await agents[agent_key].agent.run(messages_for_agent)
     response_text = extract_response_text(response)
 
     return create_agent_result(agent_key, response_text)
@@ -102,7 +102,7 @@ async def determine_responders(
     return active_results
 
 
-async def main():
+async def main() -> None:
     """Main entry point for the application."""
     try:
         from starlette.applications import Starlette

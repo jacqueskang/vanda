@@ -8,10 +8,8 @@ from langchain_community.tools import (
 )
 from langchain_community.utilities import WikipediaAPIWrapper, RequestsWrapper
 
-from vanda_team import config as _config  # Loads .env
-
 _ddg_search = DuckDuckGoSearchRun()
-_wiki_search = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
+_wiki_search = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(wiki_client=None))
 _requests_get = RequestsGetTool(
     allow_dangerous_requests=True,
     requests_wrapper=RequestsWrapper(),

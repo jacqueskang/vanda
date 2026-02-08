@@ -1,23 +1,24 @@
 """Model client initialization."""
 
 import os
+from typing import Union
 
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.openai import OpenAIChatClient
 from azure.identity.aio import DefaultAzureCredential
 
-from vanda_team import config as _config  # Loads .env
 
-
-async def get_model_client(model_name_override: str | None = None):
+async def get_model_client(
+    model_name_override: str | None = None,
+) -> Union[AzureOpenAIChatClient, OpenAIChatClient]:
     """Initialize the model client based on configuration."""
     model_endpoint = os.getenv(
         "MODEL_ENDPOINT", "https://models.github.ai/inference/"
     ).strip()
     model_name = (
-        model_name_override or os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
+        (model_name_override or os.getenv("MODEL_NAME", "openai/gpt-4o-mini")) or ""
     ).strip()
-    github_token = os.getenv("GITHUB_TOKEN", "").strip()
+    github_token = (os.getenv("GITHUB_TOKEN", "") or "").strip()
 
     if "models.github.ai" in model_endpoint or model_endpoint.startswith(
         "https://models"
@@ -30,7 +31,7 @@ async def get_model_client(model_name_override: str | None = None):
                 "3. Re-run this script"
             )
 
-        client = OpenAIChatClient(
+        client: Union[AzureOpenAIChatClient, OpenAIChatClient] = OpenAIChatClient(
             base_url=model_endpoint,
             model_id=model_name,
             api_key=github_token,
@@ -52,7 +53,9 @@ async def get_model_client(model_name_override: str | None = None):
     client = AzureOpenAIChatClient(
         endpoint=endpoint,
         deployment_name=deployment,
-        ad_token_provider=credential,
+        ad_token_provider=lambda: credential.get_token(
+            "https://cognitiveservices.azure.com/.default"
+        ).token,
     )
 
     return client

@@ -1,15 +1,7 @@
 """AI Business Team - Multi-agent coordinator system."""
 
-from typing import Never
-
-from agent_framework import (
-    ChatMessage,
-    Role,
-    WorkflowBuilder,
-    WorkflowContext,
-    WorkflowOutputEvent,
-    handler,
-)
+from typing import Dict, Any
+from agent_framework import ChatAgent, WorkflowBuilder
 
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
@@ -32,7 +24,7 @@ _workflow_cache = None
 _agents_cache = None
 
 
-async def get_or_create_agents():
+async def get_or_create_agents() -> Dict[str, ChatAgent]:
     """Get or create the agent map (cached for performance)."""
     global _agents_cache
 
@@ -58,7 +50,7 @@ async def get_or_create_agents():
     return _agents_cache
 
 
-async def get_or_create_workflow():
+async def get_or_create_workflow() -> Any:
     """Get or create the multi-agent workflow (cached for performance)."""
     global _workflow_cache
 
