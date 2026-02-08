@@ -13,7 +13,7 @@ from agents import (
     BusinessAnalystAgent,
     BuilderAgent,
     ReviewerAgent,
-    CEOAssistantAgent,
+    AssistantAgent,
 )
 
 
@@ -26,7 +26,7 @@ class VandaTeam:
         BusinessAnalystAgent,
         BuilderAgent,
         ReviewerAgent,
-        CEOAssistantAgent,
+        AssistantAgent,
     ]
 
     AGENT_METADATA: Dict[str, AgentMetadata] = {

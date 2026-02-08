@@ -8,7 +8,7 @@ from agent_framework import ChatMessage, WorkflowContext, handler
 from .base import BaseAgent
 
 
-class CEOAssistantAgent(BaseAgent):
+class AssistantAgent(BaseAgent):
 
     key = "assistant"
     name = "Emma"

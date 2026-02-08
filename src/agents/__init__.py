@@ -2,7 +2,7 @@
 
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
-from .assistant import CEOAssistantAgent
+from .assistant import AssistantAgent
 from .base import BaseAgent, AgentMetadata
 from .builder import BuilderAgent
 from .reviewer import ReviewerAgent
@@ -16,5 +16,5 @@ __all__ = [
     "BusinessAnalystAgent",
     "BuilderAgent",
     "ReviewerAgent",
-    "CEOAssistantAgent",
+    "AssistantAgent",
 ]
