@@ -12,7 +12,7 @@ try:
 except ImportError:
     requests = None
 
-DEFAULT_GITHUB_REPO = "jacqueskang/vanda-project"
+DEFAULT_GITHUB_REPO = "team-vanda/vanda-project"
 
 
 def _get_github_headers() -> Dict[str, str]:
