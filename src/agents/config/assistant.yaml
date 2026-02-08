@@ -16,4 +16,7 @@ focus_areas:
   - "Brainstorming and creative thinking"
   - "Coordination and communication support"
   - "Making the CEO feel supported and heard"
-tools: []
+tools:
+  - "web_search"
+  - "wikipedia_lookup"
+  - "fetch_url"

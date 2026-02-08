@@ -20,3 +20,6 @@ tools:
   - "list_backlog"
   - "update_backlog_item"
   - "get_backlog_item"
+  - "web_search"
+  - "wikipedia_lookup"
+  - "fetch_url"

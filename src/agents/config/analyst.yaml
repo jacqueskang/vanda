@@ -17,6 +17,9 @@ focus_areas:
   - "Success metrics and KPIs"
   - "User stories and acceptance criteria"
 tools:
+  - "web_search"
+  - "wikipedia_lookup"
+  - "fetch_url"
   - "create_backlog_item"
   - "list_backlog"
   - "update_backlog_item"
