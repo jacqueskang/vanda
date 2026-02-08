@@ -104,6 +104,24 @@ class BaseAgent(Executor):
             model_name=self.model_name,
         )
 
+    async def run_with_context(self, messages: list[Any]) -> Any:
+        """Run the agent with context set for tool execution.
+
+        This ensures that when tools are called, they know which agent is executing.
+
+        Args:
+            messages: List of chat messages to process.
+
+        Returns:
+            Agent response.
+        """
+        from .tools.context import set_agent_context
+
+        # Set the agent context before running
+        set_agent_context(self.key)
+        # Run the agent
+        return await self.agent.run(messages)
+
     @staticmethod
     async def _get_model_client(
         model_name: str = "",

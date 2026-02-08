@@ -55,7 +55,7 @@ class RouterAgent(BaseAgent):
         analysis_messages = [ChatMessage(role="user", text=routing_prompt)]
 
         # Run the router agent to get recommendations
-        response = await self.agent.run(analysis_messages)
+        response = await self.run_with_context(analysis_messages)
         response_text = self._extract_response_text(response)
 
         # Parse the response to get agent keys

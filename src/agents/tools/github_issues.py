@@ -5,6 +5,8 @@ import json
 from typing import Any, Dict
 from agent_framework._tools import ai_function as tool
 
+from .context import get_agent_context
+
 try:
     import requests  # type: ignore[import-untyped]
 except ImportError:
@@ -14,12 +16,41 @@ DEFAULT_GITHUB_REPO = "jacqueskang/vanda-project"
 
 
 def _get_github_headers() -> Dict[str, str]:
-    """Get GitHub API headers with authentication."""
-    # Use analyst-specific token if available, otherwise fall back to shared token
-    token = os.getenv("ANALYST_GITHUB_TOKEN") or os.getenv("GITHUB_TOKEN")
+    """Get GitHub API headers with authentication.
+
+    Token priority:
+    1. Current executing agent's token (ANALYST_GITHUB_TOKEN, ARCHITECT_GITHUB_TOKEN, etc.)
+    2. Other agent-specific tokens
+    3. Shared token: GITHUB_TOKEN
+    """
+    # Check current agent's token first
+    current_agent = get_agent_context()
+    if current_agent:
+        token_var = f"{current_agent.upper()}_GITHUB_TOKEN"
+        token = os.getenv(token_var)
+        if token:
+            return {
+                "Authorization": f"token {token}",
+                "Accept": "application/vnd.github.v3+json",
+            }
+
+    # Check for other agent-specific tokens as fallback
+    for agent_name in ["analyst", "architect", "builder", "reviewer"]:
+        token_var = f"{agent_name.upper()}_GITHUB_TOKEN"
+        token = os.getenv(token_var)
+        if token:
+            return {
+                "Authorization": f"token {token}",
+                "Accept": "application/vnd.github.v3+json",
+            }
+
+    # Fall back to shared token
+    token = os.getenv("GITHUB_TOKEN")
     if not token:
         raise ValueError(
-            "Neither ANALYST_GITHUB_TOKEN nor GITHUB_TOKEN environment variable is set"
+            "No GitHub token found. Set one of: ANALYST_GITHUB_TOKEN, "
+            "ARCHITECT_GITHUB_TOKEN, BUILDER_GITHUB_TOKEN, REVIEWER_GITHUB_TOKEN, "
+            "or GITHUB_TOKEN"
         )
 
     return {

@@ -15,4 +15,8 @@ focus_areas:
   - "Library and framework recommendations"
   - "Deployment strategies"
   - "Security and performance considerations"
-tools: []
+tools:
+  - "create_backlog_item"
+  - "list_backlog"
+  - "update_backlog_item"
+  - "get_backlog_item"

@@ -107,7 +107,7 @@ class VandaTeam:
         Returns:
             Dict containing agent response data.
         """
-        response = await self.agents[agent_key].agent.run(messages)
+        response = await self.agents[agent_key].run_with_context(messages)
         response_text = self.extract_response_text(response)
         return self.create_agent_result(agent_key, response_text)
 
