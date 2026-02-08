@@ -113,7 +113,7 @@ async def main() -> None:
 
         agents = await create_all_team_agents()
 
-        root_dir = Path(__file__).resolve().parents[2]
+        root_dir = Path(__file__).resolve().parents[1]
         ui_file = root_dir / "web" / "web_ui.html"
 
         async def chat_handler(request: Any) -> Any:
