@@ -523,7 +523,6 @@
         // Agent list - will be loaded dynamically from backend
         let AGENTS = [];
         let currentMention = "";
-        let mentionStartIndex = -1;
         let selectedSuggestionIndex = -1;
         
         // Load agents from backend
@@ -621,7 +620,6 @@
             }
             
             currentMention = afterAt.toLowerCase();
-            mentionStartIndex = atIndex;
             
             // Show matching suggestions
             const filtered = AGENTS.filter(agent => 
