@@ -6,7 +6,7 @@ from vanda_team.agents.base import BaseTeamAgent
 
 class BaseSpecialistAgent(BaseTeamAgent):
     """Base class for specialist agents that only respond when mentioned."""
-    
+
     # Specialist agents only respond when explicitly mentioned
     specialist_instructions: str = (
         "\n\nIMPORTANT: You should ONLY respond if you are explicitly mentioned by name in the message. "
@@ -17,8 +17,8 @@ class BaseSpecialistAgent(BaseTeamAgent):
     def should_respond(self, messages):
         """Specialist agents respond only when mentioned by name."""
         for msg in messages:
-            if hasattr(msg, 'text'):
-                mentions = re.findall(r'@(\w+)', msg.text, re.IGNORECASE)
+            if hasattr(msg, "text"):
+                mentions = re.findall(r"@(\w+)", msg.text, re.IGNORECASE)
                 for mention in mentions:
                     if mention.lower() == self.name.lower():
                         return True
@@ -31,19 +31,20 @@ class BaseSpecialistAgent(BaseTeamAgent):
         model_name = cls.model_name.strip() if cls.model_name else ""
         if model_name:
             from vanda_team.model_client import get_model_client
+
             client = await get_model_client(model_name)
         else:
             client = await cls.get_default_client()
-        
+
         # Build instructions
         if cls.tools:
             instructions = cls.build_instructions_with_tools()
         else:
             instructions = cls.build_instructions()
-        
+
         # Add specialist instructions
         instructions += cls.specialist_instructions
-        
+
         # Create agent
         if cls.tools:
             return client.create_agent(

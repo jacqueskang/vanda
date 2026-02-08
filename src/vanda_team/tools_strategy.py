@@ -1,7 +1,11 @@
 """StrategyAgent research tools (LangChain-based)."""
 
 from agent_framework._tools import ai_function as tool
-from langchain_community.tools import DuckDuckGoSearchRun, WikipediaQueryRun, RequestsGetTool
+from langchain_community.tools import (
+    DuckDuckGoSearchRun,
+    WikipediaQueryRun,
+    RequestsGetTool,
+)
 from langchain_community.utilities import WikipediaAPIWrapper, RequestsWrapper
 
 from vanda_team import config as _config  # Loads .env

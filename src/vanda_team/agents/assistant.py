@@ -42,23 +42,22 @@ class CEOAssistantAgent(BaseTeamAgent):
     def should_respond(self, messages):
         """CEO Assistant responds if mentioned or if no specialists are mentioned."""
         import re
+
         # First, check if this agent is explicitly mentioned
         for msg in messages:
-            if hasattr(msg, 'text'):
-                mentions = re.findall(r'@(\w+)', msg.text, re.IGNORECASE)
+            if hasattr(msg, "text"):
+                mentions = re.findall(r"@(\w+)", msg.text, re.IGNORECASE)
                 for mention in mentions:
                     if mention.lower() == self.name.lower():
                         return True
-        
+
         # Also respond if no specialists are mentioned
         for msg in messages:
-            if hasattr(msg, 'text'):
-                mentions = re.findall(r'@(\w+)', msg.text, re.IGNORECASE)
+            if hasattr(msg, "text"):
+                mentions = re.findall(r"@(\w+)", msg.text, re.IGNORECASE)
                 for mention in mentions:
                     # Check if any known specialist name is mentioned
-                    if mention.lower() in {
-                        "claire", "marc", "sophie", "hugo", "nina"
-                    }:
+                    if mention.lower() in {"claire", "marc", "sophie", "hugo", "nina"}:
                         return False
         return True
 
@@ -91,16 +90,16 @@ class CEOAssistantAgent(BaseTeamAgent):
             f"## Focus Areas\n"
             + "\n".join(f"- {area}" for area in CEOAssistantAgent.focus_areas)
             + "\n\n"
-                        "## Your Team of Specialists\n"
-                        "You can involve specialist team members when needed by mentioning them in your response:\n"
-                        "- @Claire (Strategy Lead): Market analysis, competitive positioning, business strategy\n"
-                        "- @Marc (Technical Architect): System design, architecture, tech stack decisions\n"
-                        "- @Sophie (Business Analyst): Product planning, requirements, roadmaps\n"
-                        "- @Hugo (Lead Engineer): Implementation, code, deployment\n"
-                        "- @Nina (Quality Reviewer): Quality assurance, review, validation\n"
-                        "\n"
-                        "When you mention a specialist (e.g., '@Claire what do you think?'), they will receive the message and provide their expert input.\n"
-                        "\n"
+            "## Your Team of Specialists\n"
+            "You can involve specialist team members when needed by mentioning them in your response:\n"
+            "- @Claire (Strategy Lead): Market analysis, competitive positioning, business strategy\n"
+            "- @Marc (Technical Architect): System design, architecture, tech stack decisions\n"
+            "- @Sophie (Business Analyst): Product planning, requirements, roadmaps\n"
+            "- @Hugo (Lead Engineer): Implementation, code, deployment\n"
+            "- @Nina (Quality Reviewer): Quality assurance, review, validation\n"
+            "\n"
+            "When you mention a specialist (e.g., '@Claire what do you think?'), they will receive the message and provide their expert input.\n"
+            "\n"
             "## Decision Tree (MUST FOLLOW):\n"
             "1. Is the question about TECHNICAL/ARCHITECTURE/ENGINEERING? → Mention @Marc or @Hugo, do NOT answer\n"
             "2. Is the question about STRATEGY/MARKET/BUSINESS? → Mention @Claire, do NOT answer\n"

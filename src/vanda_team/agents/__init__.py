@@ -19,7 +19,6 @@ from .builder import BuilderAgent
 from .reviewer import ReviewerAgent
 from .strategy import StrategyAgent
 
-
 AGENT_METADATA = {
     StrategyAgent.key: StrategyAgent.metadata(),
     TechnicalArchitectAgent.key: TechnicalArchitectAgent.metadata(),

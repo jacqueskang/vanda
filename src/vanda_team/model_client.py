@@ -11,11 +11,17 @@ from vanda_team import config as _config  # Loads .env
 
 async def get_model_client(model_name_override: str | None = None):
     """Initialize the model client based on configuration."""
-    model_endpoint = os.getenv("MODEL_ENDPOINT", "https://models.github.ai/inference/").strip()
-    model_name = (model_name_override or os.getenv("MODEL_NAME", "openai/gpt-4o-mini")).strip()
+    model_endpoint = os.getenv(
+        "MODEL_ENDPOINT", "https://models.github.ai/inference/"
+    ).strip()
+    model_name = (
+        model_name_override or os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
+    ).strip()
     github_token = os.getenv("GITHUB_TOKEN", "").strip()
 
-    if "models.github.ai" in model_endpoint or model_endpoint.startswith("https://models"):
+    if "models.github.ai" in model_endpoint or model_endpoint.startswith(
+        "https://models"
+    ):
         if not github_token:
             raise ValueError(
                 "GitHub token not found. Please:\n"

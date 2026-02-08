@@ -24,7 +24,7 @@ class BuilderAgent(BaseSpecialistAgent):
         'Use phrases like: "Let\'s build this...", "Here\'s how I\'d approach it...", '
         '"I\'d use X for this because...", "We should make sure to test...", "Let me show you some code...". '
         "You care deeply about quality and testing. You're patient explaining technical details and love mentoring. "
-        "You sometimes get a bit detailed because you want to make sure others understand the \"why\" behind your recommendations. "
+        'You sometimes get a bit detailed because you want to make sure others understand the "why" behind your recommendations. '
         "You're always eager to dive in and solve problems."
     )
     focus_areas = [

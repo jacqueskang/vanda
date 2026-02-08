@@ -1,24 +1,33 @@
 """HTTP server entry point for the business team."""
 
-import re
 import sys
 from pathlib import Path
+from typing import Dict, List, Any
 
 from agent_framework import Role, ChatMessage
 
-from vanda_team import config as _config  # Loads .env
-from vanda_team.agents import AGENT_METADATA, get_or_create_agents, get_or_create_workflow, BaseTeamAgent
+from vanda_team.agents import (
+    AGENT_METADATA,
+    get_or_create_agents,
+    CEOAssistantAgent,
+    StrategyAgent,
+    TechnicalArchitectAgent,
+    BusinessAnalystAgent,
+    BuilderAgent,
+    ReviewerAgent,
+)
 
 # Constants
 NAME_TO_KEY = {
     "claire": "strategy",
-    "marc": "architect", 
+    "marc": "architect",
     "sophie": "analyst",
     "hugo": "builder",
-    "nina": "reviewer"
+    "nina": "reviewer",
 }
 
-def extract_response_text(response):
+
+def extract_response_text(response: Any) -> str:
     """Extract text from agent response."""
     response_text = ""
     if hasattr(response, "messages") and response.messages:
@@ -27,14 +36,15 @@ def extract_response_text(response):
                 response_text += msg.text + " "
     return response_text.strip()
 
-def create_agent_result(agent_key, response_text):
+
+def create_agent_result(agent_key: str, response_text: str) -> Dict[str, Any]:
     """Create result dict for agent response."""
     estimated_tokens = max(1, len(response_text) // 4) if response_text else 0
     metadata = AGENT_METADATA.get(agent_key, {})
     label = agent_key
     if metadata:
         label = f"{metadata.get('name', agent_key)} ({metadata.get('role', agent_key)})"
-    
+
     return {
         "output": response_text or "Request processed",
         "agent": agent_key,
@@ -45,12 +55,51 @@ def create_agent_result(agent_key, response_text):
         "status": "complete",
     }
 
-async def run_agent_with_messages(agent_key, messages_for_agent, agents):
+
+async def run_agent_with_messages(
+    agent_key: str, messages_for_agent: List[ChatMessage], agents: Dict[str, Any]
+) -> Dict[str, Any]:
     """Run an agent with given messages."""
     response = await agents[agent_key].run(messages_for_agent)
     response_text = extract_response_text(response)
-    
+
     return create_agent_result(agent_key, response_text)
+
+
+async def determine_responders(
+    messages: List[ChatMessage], agents: Dict[str, Any]
+) -> List[Dict[str, Any]]:
+    """Determine which agents should respond to the given messages in a chain."""
+    active_results = []
+    current_messages = messages
+    responded_agents = set()
+
+    while True:
+        # Find agents that should respond but haven't yet
+        potential_responders = [
+            key
+            for key, agent in agents.items()
+            if agent.should_respond(current_messages) and key not in responded_agents
+        ]
+
+        if not potential_responders:
+            break
+
+        # Run the first potential responder (to avoid conflicts, run one at a time)
+        responder_key = potential_responders[0]
+
+        result = await run_agent_with_messages(responder_key, current_messages, agents)
+
+        if result.get("output", "").strip().upper() != "PASS":
+            active_results.append(result)
+            responded_agents.add(responder_key)
+
+            # Add this response to the conversation for potential further responses
+            current_messages = current_messages + [
+                ChatMessage(role=Role.ASSISTANT, text=result["output"])
+            ]
+
+    return active_results
 
 
 async def main():
@@ -69,10 +118,20 @@ async def main():
 
         agents = await get_or_create_agents()
 
+        # Create custom agent instances
+        custom_agents = {
+            "assistant": CEOAssistantAgent(agents["assistant"], "assistant"),
+            "strategy": StrategyAgent(agents["strategy"], "strategy"),
+            "architect": TechnicalArchitectAgent(agents["architect"], "architect"),
+            "analyst": BusinessAnalystAgent(agents["analyst"], "analyst"),
+            "builder": BuilderAgent(agents["builder"], "builder"),
+            "reviewer": ReviewerAgent(agents["reviewer"], "reviewer"),
+        }
+
         root_dir = Path(__file__).resolve().parents[2]
         ui_file = root_dir / "web" / "web_ui.html"
 
-        async def chat_handler(request):
+        async def chat_handler(request: Any) -> Any:
             """Handle chat requests."""
             try:
                 data = await request.json()
@@ -100,49 +159,24 @@ async def main():
                     else:
                         chat_messages.append(msg)
 
-                # Determine which agents should respond initially
-                initial_responders = [key for key, agent in agents.items() if agent.should_respond(chat_messages)]
-                if not initial_responders:
-                    initial_responders = ["assistant"]
+                # Determine and run responders
+                active_results = await determine_responders(
+                    chat_messages, custom_agents
+                )
 
-                import asyncio
-                
-                async def run_agent(agent_key):
-                    return await run_agent_with_messages(agent_key, chat_messages, agents)
-                
-                # Run initial responders
-                results = await asyncio.gather(*[run_agent(key) for key in initial_responders])
-                active_results = [r for r in results if r.get("output", "").strip().upper() != "PASS"]
-                
-                # Check if assistant responded and mentioned other agents
-                assistant_result = next((r for r in active_results if r["agent"] == "assistant"), None)
-                if assistant_result:
-                    assistant_text = assistant_result.get("output", "")
-                    # Add assistant response to messages for potential additional responders
-                    extended_messages = chat_messages + [ChatMessage(role=Role.ASSISTANT, text=assistant_text)]
-                    
-                    # Find additional agents that should respond now
-                    additional_responders = [key for key, agent in agents.items() 
-                                           if agent.should_respond(extended_messages) and key not in initial_responders]
-                    
-                    if additional_responders:
-                        additional_results = await asyncio.gather(*[run_agent_with_messages(key, extended_messages, agents) 
-                                                                   for key in additional_responders])
-                        for r in additional_results:
-                            if r.get("output", "").strip().upper() != "PASS":
-                                active_results.append(r)
-                
                 # Return single or multiple responses
-                
+
                 if len(active_results) == 1:
                     return JSONResponse(active_results[0])
                 else:
-                    return JSONResponse({
-                        "responses": active_results,
-                        "status": "complete",
-                        "agent_count": len(active_results)
-                    })
-                
+                    return JSONResponse(
+                        {
+                            "responses": active_results,
+                            "status": "complete",
+                            "agent_count": len(active_results),
+                        }
+                    )
+
             except Exception as e:
                 print(f"[!] Error in chat handler: {e}")
                 import traceback
@@ -156,10 +190,10 @@ async def main():
                     status_code=500,
                 )
 
-        async def health_handler(request):
+        async def health_handler(request: Any) -> Any:
             return JSONResponse({"status": "ok"})
 
-        async def agents_handler(request):
+        async def agents_handler(request: Any) -> Any:
             """Return list of available agents."""
             agents_list = [
                 {
@@ -167,13 +201,13 @@ async def main():
                     "name": meta["name"],
                     "role": meta["role"],
                     "avatar": meta["avatar_url"],
-                    "description": meta.get("description", "")
+                    "description": meta.get("description", ""),
                 }
                 for meta in AGENT_METADATA.values()
             ]
             return JSONResponse({"agents": agents_list})
 
-        async def ui_handler(request):
+        async def ui_handler(request: Any) -> Any:
             if ui_file.exists():
                 return FileResponse(ui_file)
             return PlainTextResponse("web_ui.html not found", status_code=404)

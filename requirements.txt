@@ -28,3 +28,8 @@ langchain-community>=0.2.0
 duckduckgo-search>=6.0.0
 ddgs>=9.0.0
 wikipedia>=1.4.0
+
+# Development tools
+mypy>=1.19.0
+flake8>=7.0.0
+black>=26.0.0
