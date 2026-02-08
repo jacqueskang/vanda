@@ -2,7 +2,7 @@
 
 import re
 from typing import List
-from agent_framework import ChatMessage, ChatAgent
+from agent_framework import ChatMessage
 from vanda_team.agents.base import BaseTeamAgent
 
 
@@ -27,29 +27,13 @@ class BaseSpecialistAgent(BaseTeamAgent):
         return False
 
     @classmethod
-    async def create_agent(cls) -> ChatAgent:
-        """Create an agent instance with specialist instructions."""
-        # Get the right client based on model_name
-        model_name = cls.model_name.strip() if cls.model_name else ""
-        client = await cls.get_model_client(model_name if model_name else None)
+    def build_instructions(cls, tools_info: str = "") -> str:
+        """Build instructions with specialist requirements."""
+        instructions = super().build_instructions(tools_info)
+        return instructions + cls.specialist_instructions
 
-        # Build instructions
-        if cls.tools:
-            instructions = cls.build_instructions_with_tools()
-        else:
-            instructions = cls.build_instructions()
-
-        # Add specialist instructions
-        instructions += cls.specialist_instructions
-
-        # Create agent
-        if cls.tools:
-            return client.create_agent(
-                name=f"{cls.__name__}",
-                instructions=instructions,
-                tools=cls.tools,
-            )
-        return client.create_agent(
-            name=f"{cls.__name__}",
-            instructions=instructions,
-        )
+    @classmethod
+    def build_instructions_with_tools(cls) -> str:
+        """Build instructions with tools and specialist requirements."""
+        instructions = super().build_instructions_with_tools()
+        return instructions + cls.specialist_instructions
