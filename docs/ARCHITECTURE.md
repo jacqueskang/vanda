@@ -6,11 +6,11 @@ User -> Strategy -> Architect -> Analyst -> Builder -> Reviewer -> Response
 
 ## Core Modules
 
-- src/vanda_team/agents.py: agent roles + workflow
-- src/vanda_team/model_client.py: model client
-- src/vanda_team/tools_strategy.py: research tools
-- src/vanda_team/tools_github.py: GitHub tools
-- src/vanda_team/server.py: HTTP server
+- src/agents.py: agent roles + workflow
+- src/model_client.py: model client
+- src/tools_strategy.py: research tools
+- src/tools_github.py: GitHub tools
+- src/server.py: HTTP server
 
 ## Endpoints
 

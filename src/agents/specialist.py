@@ -3,7 +3,7 @@
 import re
 from typing import List
 from agent_framework import ChatMessage
-from vanda_team.agents.base import BaseAgent
+from .base import BaseAgent
 
 
 class BaseSpecialistAgent(BaseAgent):
@@ -29,5 +29,5 @@ class BaseSpecialistAgent(BaseAgent):
     @classmethod
     def build_instructions(cls) -> str:
         """Build instructions with specialist requirements."""
-        instructions = super().build_instructions()
+        instructions: str = super().build_instructions()
         return instructions + cls.specialist_instructions

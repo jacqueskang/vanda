@@ -5,7 +5,7 @@ from typing import List
 
 from agent_framework import ChatMessage, WorkflowContext, handler
 
-from vanda_team.agents.base import BaseAgent
+from .base import BaseAgent
 
 
 class CEOAssistantAgent(BaseAgent):

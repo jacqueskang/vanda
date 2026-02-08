@@ -30,7 +30,7 @@ API: http://127.0.0.1:8088/chat
 
 ```
 vanda/
-├── src/vanda_team/     # Core package
+├── src/     # Core package
 ├── scripts/            # Entry points
 ├── web/                # Web UI assets
 ├── docs/               # Short docs

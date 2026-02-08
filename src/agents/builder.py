@@ -2,7 +2,7 @@
 
 from agent_framework import ChatMessage, WorkflowContext, handler
 
-from vanda_team.agents.specialist import BaseSpecialistAgent
+from .specialist import BaseSpecialistAgent
 
 
 class BuilderAgent(BaseSpecialistAgent):

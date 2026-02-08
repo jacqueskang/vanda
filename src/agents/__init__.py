@@ -1,6 +1,6 @@
 """AI Business Team - Multi-agent coordinator system."""
 
-from typing import Dict
+from typing import Dict, Type
 
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
@@ -10,7 +10,7 @@ from .builder import BuilderAgent
 from .reviewer import ReviewerAgent
 from .strategy import StrategyAgent
 
-AGENT_CLASSES = [
+AGENT_CLASSES: list[Type[BaseAgent]] = [
     StrategyAgent,
     TechnicalArchitectAgent,
     BusinessAnalystAgent,

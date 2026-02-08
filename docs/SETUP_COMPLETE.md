@@ -7,7 +7,7 @@ If you are looking for setup steps, use:
 Current layout:
 ```
 vanda/
-├── src/vanda_team/
+├── src/
 ├── scripts/
 ├── web/
 ├── docs/

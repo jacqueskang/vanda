@@ -2,7 +2,7 @@
 
 from agent_framework import ChatMessage, WorkflowContext, handler
 
-from vanda_team.agents.specialist import BaseSpecialistAgent
+from .specialist import BaseSpecialistAgent
 from .tools.web_search import web_search
 from .tools.wikipedia_lookup import wikipedia_lookup
 from .tools.fetch_url import fetch_url

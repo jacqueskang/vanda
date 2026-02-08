@@ -8,7 +8,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT_DIR / "src"
 sys.path.insert(0, str(SRC_DIR))
 
-from vanda_team.server import main
+from server import main
 
 __all__ = ["main"]
 

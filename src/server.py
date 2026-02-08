@@ -6,7 +6,7 @@ from typing import Dict, List, Any, Optional
 
 from agent_framework import Role, ChatMessage
 
-from vanda_team.agents import (
+from agents import (
     AGENT_METADATA,
     AgentMetadata,
     create_all_team_agents,
