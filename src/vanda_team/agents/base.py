@@ -130,13 +130,15 @@ class BaseTeamAgent(Executor, abc.ABC):
         instructions += f"FOCUS AREAS:\n{focus_text}\n"
 
         if cls.tools:
-            tools_text = (
-                "You have access to research tools:\n"
-                "- strategy_web_search: Web search for market data\n"
-                "- strategy_wikipedia_lookup: Background research\n"
-                "- strategy_fetch_url: Fetch public sources\n"
-                "\nUse these tools when you need real-world data."
-            )
+            tools_text = "You have access to the following tools:\n"
+            for tool in cls.tools:
+                tool_name = getattr(tool, "name", str(tool))
+                tool_desc = getattr(tool, "description", "")
+                tools_text += f"- {tool_name}"
+                if tool_desc:
+                    tools_text += f": {tool_desc}"
+                tools_text += "\n"
+            tools_text += "\nUse these tools when needed."
             instructions += f"\n{tools_text}\n"
 
         instructions += (
