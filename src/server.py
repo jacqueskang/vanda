@@ -1,6 +1,7 @@
 """HTTP server entry point for the business team."""
 
 import sys
+from dataclasses import asdict
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
@@ -44,7 +45,7 @@ def create_agent_result(agent_key: str, response_text: str) -> Dict[str, Any]:
         "output": response_text or "Request processed",
         "agent": agent_key,
         "agent_label": label,
-        "agent_meta": metadata,
+        "agent_meta": asdict(metadata) if metadata else None,
         "agent_avatar": metadata.avatar_url if metadata else None,
         "tokens_estimated": estimated_tokens,
         "status": "complete",
