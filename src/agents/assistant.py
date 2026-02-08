@@ -45,26 +45,11 @@ class AssistantAgent(BaseAgent):
     ]
 
     def should_respond(self, messages: List[ChatMessage]) -> bool:
-        """CEO Assistant responds if mentioned or if no specialists are mentioned."""
-        import re
+        """Assistant does not respond based on should_respond logic.
 
-        # First, check if this agent is explicitly mentioned
-        for msg in messages:
-            if hasattr(msg, "text"):
-                mentions = re.findall(r"@(\w+)", msg.text, re.IGNORECASE)
-                for mention in mentions:
-                    if mention.lower() == self.name.lower():
-                        return True
-
-        # Also respond if no specialists are mentioned
-        for msg in messages:
-            if hasattr(msg, "text"):
-                mentions = re.findall(r"@(\w+)", msg.text, re.IGNORECASE)
-                for mention in mentions:
-                    # Check if any known specialist name is mentioned
-                    if mention.lower() in {"claire", "marc", "sophie", "hugo", "nina"}:
-                        return False
-        return True
+        The router agent handles all routing decisions.
+        """
+        return False
 
     @handler
     async def handle_business_inquiry(

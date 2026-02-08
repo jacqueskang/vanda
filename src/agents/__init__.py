@@ -6,6 +6,7 @@ from .assistant import AssistantAgent
 from .base import BaseAgent, AgentMetadata
 from .builder import BuilderAgent
 from .reviewer import ReviewerAgent
+from .router import RouterAgent
 from .strategy import StrategyAgent
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     "BuilderAgent",
     "ReviewerAgent",
     "AssistantAgent",
+    "RouterAgent",
 ]

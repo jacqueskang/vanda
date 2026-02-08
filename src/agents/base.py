@@ -76,10 +76,12 @@ class BaseAgent(Executor, abc.ABC):
 
         return cls(chat_agent)
 
-    @abc.abstractmethod
     def should_respond(self, messages: List[ChatMessage]) -> bool:
-        """Determine if this agent should respond based on message content."""
-        pass
+        """Determine if this agent should respond based on message content.
+
+        Default implementation returns False. Override in subclasses for custom logic.
+        """
+        return False
 
     @classmethod
     def metadata(cls) -> AgentMetadata:

@@ -14,6 +14,7 @@ from agents import (
     BuilderAgent,
     ReviewerAgent,
     AssistantAgent,
+    RouterAgent,
 )
 
 
@@ -29,13 +30,17 @@ class VandaTeam:
         AssistantAgent,
     ]
 
-    def __init__(self, agents: Dict[str, BaseAgent]):
+    ROUTER_CLASS: Type[BaseAgent] = RouterAgent
+
+    def __init__(self, agents: Dict[str, BaseAgent], router: "RouterAgent"):
         """Initialize the team with a dictionary of agents.
 
         Args:
             agents: Dictionary mapping agent keys to agent instances.
+            router: Router agent for determining which agents should respond.
         """
         self.agents = agents
+        self.router = router
 
     @classmethod
     async def create(cls) -> "VandaTeam":
@@ -47,7 +52,8 @@ class VandaTeam:
         agents = {}
         for agent_class in cls.AGENT_CLASSES:
             agents[agent_class.key] = await agent_class.create()
-        return cls(agents)
+        router = await cls.ROUTER_CLASS.create()
+        return cls(agents, router)  # type: ignore
 
     @staticmethod
     def extract_response_text(response: Any) -> str:
@@ -116,7 +122,10 @@ class VandaTeam:
     async def determine_responders(
         self, messages: List[ChatMessage]
     ) -> List[Dict[str, Any]]:
-        """Determine which agents should respond to the given messages in a chain.
+        """Determine which agents should respond using the router agent.
+
+        The router analyzes the chat history and determines which agents are relevant
+        to the current message based on context and expertise areas.
 
         Args:
             messages: List of chat messages to evaluate.
@@ -124,35 +133,26 @@ class VandaTeam:
         Returns:
             List of agent response dictionaries.
         """
+        # Use the router agent to determine which agents should respond
+        router_recommendations = await self.router.analyze_and_route(messages)
+
         active_results = []
         current_messages = messages
-        responded_agents = set()
 
-        while True:
-            # Find agents that should respond but haven't yet
-            potential_responders = [
-                key
-                for key, agent in self.agents.items()
-                if agent.should_respond(current_messages)
-                and key not in responded_agents
+        # Run recommended agents in order
+        for agent_key in router_recommendations:
+            if agent_key not in self.agents:
+                continue
+
+            result = await self.run_agent_with_messages(agent_key, current_messages)
+
+            # Add successful response to results
+            active_results.append(result)
+
+            # Add this response to the conversation for context
+            current_messages = current_messages + [
+                ChatMessage(role=Role.ASSISTANT, text=result["output"])
             ]
-
-            if not potential_responders:
-                break
-
-            # Run the first potential responder (to avoid conflicts, run one at a time)
-            responder_key = potential_responders[0]
-
-            result = await self.run_agent_with_messages(responder_key, current_messages)
-
-            if result.get("output", "").strip().upper() != "PASS":
-                active_results.append(result)
-                responded_agents.add(responder_key)
-
-                # Add this response to the conversation for potential further responses
-                current_messages = current_messages + [
-                    ChatMessage(role=Role.ASSISTANT, text=result["output"])
-                ]
 
         return active_results
 
