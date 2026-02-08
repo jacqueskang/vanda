@@ -27,7 +27,8 @@ async def main() -> None:
         from starlette.applications import Starlette
         from starlette.middleware.cors import CORSMiddleware
         from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
-        from starlette.routing import Route
+        from starlette.routing import Mount, Route
+        from starlette.staticfiles import StaticFiles
         import uvicorn
 
         logging_config = uvicorn.config.LOGGING_CONFIG.copy()
@@ -152,6 +153,9 @@ async def main() -> None:
                 return FileResponse(ui_file)
             return PlainTextResponse("index.html not found", status_code=404)
 
+        # Get the web directory path
+        web_dir = root_dir / "web"
+
         app = Starlette(
             routes=[
                 Route("/", ui_handler, methods=["GET"]),
@@ -160,6 +164,7 @@ async def main() -> None:
                 Route("/agents", agents_handler, methods=["GET"]),
                 Route("/chat", chat_handler, methods=["POST", "OPTIONS"]),
                 Route("/run", chat_handler, methods=["POST", "OPTIONS"]),
+                Mount("/", StaticFiles(directory=str(web_dir)), name="static"),
             ]
         )
 
