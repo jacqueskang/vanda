@@ -86,6 +86,7 @@ class RouterAgent(BaseAgent):
             "sophie": "analyst",
             "hugo": "builder",
             "nina": "reviewer",
+            "emma": "assistant",
         }
 
         # Find all @mentions in the text
@@ -184,7 +185,14 @@ Return ONLY valid JSON, no other text."""
                     agent
                     for agent in agents
                     if agent
-                    in {"strategy", "architect", "analyst", "builder", "reviewer"}
+                    in {
+                        "strategy",
+                        "architect",
+                        "analyst",
+                        "builder",
+                        "reviewer",
+                        "assistant",
+                    }
                 ]
                 return valid_agents
         except (json.JSONDecodeError, AttributeError):
