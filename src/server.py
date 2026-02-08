@@ -7,6 +7,7 @@ from typing import Any
 from agent_framework import Role, ChatMessage
 
 from vanda_team import VandaTeam
+from agents.tools.approval import register_tool_approval
 
 # Constants
 NAME_TO_KEY = {
@@ -44,6 +45,7 @@ async def main() -> None:
                 messages = data.get("messages", [])
 
                 chat_messages = []
+                last_user_text = ""
                 for msg in messages:
                     if isinstance(msg, dict):
                         role_value = msg.get("role", "user")
@@ -56,6 +58,9 @@ async def main() -> None:
                             else:
                                 role_value = Role.USER
 
+                        if role_value == Role.USER:
+                            last_user_text = msg.get("text", "") or ""
+
                         chat_messages.append(
                             ChatMessage(
                                 role=role_value,
@@ -64,6 +69,29 @@ async def main() -> None:
                         )
                     else:
                         chat_messages.append(msg)
+
+                decision = register_tool_approval(last_user_text)
+                if decision:
+                    if decision.action == "approve":
+                        chat_messages.append(
+                            ChatMessage(
+                                role=Role.SYSTEM,
+                                text=(
+                                    "User approved tool request "
+                                    f"{decision.request_id}. Proceed with the tool call."
+                                ),
+                            )
+                        )
+                    else:
+                        chat_messages.append(
+                            ChatMessage(
+                                role=Role.SYSTEM,
+                                text=(
+                                    "User denied tool request "
+                                    f"{decision.request_id}. Do not call that tool unless a new approval is requested."
+                                ),
+                            )
+                        )
 
                 # Determine and run responders
                 active_results = await team.determine_responders(chat_messages)

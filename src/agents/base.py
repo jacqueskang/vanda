@@ -222,6 +222,7 @@ class BaseAgent(Executor):
                             tools_text += f": {tool_desc}"
                         tools_text += "\n"
             tools_text += "\nUse these tools when needed."
+            tools_text += " Before calling any tool, ask the user for approval and wait for explicit confirmation."
             instructions += f"\n{tools_text}\n"
 
         instructions += (
