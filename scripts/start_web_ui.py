@@ -20,13 +20,13 @@ WEB_DIR = ROOT_DIR / "web"
 
 
 class WebUIHandler(SimpleHTTPRequestHandler):
-    """Serve web_ui.html as the default page."""
+    """Serve index.html as the default page."""
 
     def do_GET(self):
         # Serve the main UI directly to avoid directory issues.
-        if self.path in ("/", "", "/web_ui.html"):
+        if self.path in ("/", "", "/index.html"):
             try:
-                content = (WEB_DIR / "web_ui.html").read_bytes()
+                content = (WEB_DIR / "index.html").read_bytes()
             except Exception as e:
                 self.send_error(404, str(e))
                 return
@@ -63,10 +63,10 @@ def start_server():
 
 
 def main(skip_browser=False):
-    # Check if web_ui.html exists
-    ui_file = WEB_DIR / "web_ui.html"
+    # Check if index.html exists
+    ui_file = WEB_DIR / "index.html"
     if not ui_file.exists():
-        print("Error: web_ui.html not found in web/ directory")
+        print("Error: index.html not found in web/ directory")
         print(f"Expected path: {ui_file}")
         sys.exit(1)
     

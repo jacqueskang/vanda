@@ -35,7 +35,7 @@ async def main() -> None:
         team = await VandaTeam.create()
 
         root_dir = Path(__file__).resolve().parents[1]
-        ui_file = root_dir / "web" / "web_ui.html"
+        ui_file = root_dir / "web" / "index.html"
 
         async def chat_handler(request: Any) -> Any:
             """Handle chat requests."""
@@ -105,12 +105,12 @@ async def main() -> None:
         async def ui_handler(request: Any) -> Any:
             if ui_file.exists():
                 return FileResponse(ui_file)
-            return PlainTextResponse("web_ui.html not found", status_code=404)
+            return PlainTextResponse("index.html not found", status_code=404)
 
         app = Starlette(
             routes=[
                 Route("/", ui_handler, methods=["GET"]),
-                Route("/web_ui.html", ui_handler, methods=["GET"]),
+                Route("/index.html", ui_handler, methods=["GET"]),
                 Route("/health", health_handler, methods=["GET"]),
                 Route("/agents", agents_handler, methods=["GET"]),
                 Route("/chat", chat_handler, methods=["POST", "OPTIONS"]),

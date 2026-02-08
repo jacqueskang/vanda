@@ -49,7 +49,7 @@ def main():
     # Check if required files exist
     required_files = [
         scripts_dir / "business_team.py",
-        web_dir / "web_ui.html",
+        web_dir / "index.html",
     ]
     for file_path in required_files:
         if not file_path.exists():
