@@ -520,6 +520,7 @@
         const sendBtn = document.getElementById("sendBtn");
         const statusIndicator = document.getElementById("statusIndicator");
         const agentSuggestions = document.getElementById("agentSuggestions");
+        const conversation = [];
         // Agent list - will be loaded dynamically from backend
         let AGENTS = [];
         let currentMention = "";
@@ -717,6 +718,10 @@
             
             // Add user message to chat
             addMessage(question, "user");
+            conversation.push({ role: "user", text: question });
+            if (conversation.length > 10) {
+                conversation.splice(0, conversation.length - 10);
+            }
             questionInput.value = "";
             questionInput.focus();
             
@@ -726,7 +731,7 @@
             
             try {
                 const payload = {
-                    messages: [{ role: "user", text: question }]
+                    messages: conversation
                 };
                 
                 console.log("Sending request to", ENDPOINT, "with payload:", payload);
@@ -792,6 +797,7 @@
         
         function displayResponse(result) {
             let responseText = "";
+            let agentName = "";
             if (typeof result === "string") {
                 responseText = result;
             } else if (result.output) {
@@ -814,8 +820,8 @@
             let headerLine = "";
             let footerLine = "";
             if (result && typeof result === "object") {
-                const agentName = result.agent_label
-                    ? String(result.agent_label)
+                agentName = result.agent_meta && result.agent_meta.name
+                    ? String(result.agent_meta.name)
                     : (result.agent ? String(result.agent) : "");
                 const avatarUrl = result.agent_avatar
                     ? String(result.agent_avatar)
@@ -831,6 +837,14 @@
             const safeText = escapeHtml(responseText).replace(/\n/g, "<br />");
             const footerHtml = footerLine ? `<div>${escapeHtml(footerLine)}</div>` : "";
             addMessage(headerLine + safeText + footerHtml, "assistant", true);
+
+            if (responseText) {
+                const agentPrefix = agentName ? `(${agentName}) ` : "";
+                conversation.push({ role: "assistant", text: `${agentPrefix}${responseText}` });
+                if (conversation.length > 10) {
+                    conversation.splice(0, conversation.length - 10);
+                }
+            }
         }
         
         function addMessage(content, role, useHtml = false) {

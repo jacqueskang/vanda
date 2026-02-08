@@ -71,7 +71,6 @@ class RouterAgent(BaseAgent):
 
         # Parse the response to get agent keys
         agent_keys = self._parse_agent_recommendations(response_text)
-        self.logger.debug("Router: Parsed agent keys from LLM: %s", agent_keys)
 
         # Prioritize last agent if they should continue the conversation
         if last_agent_key and last_agent_key in self.team.agents:

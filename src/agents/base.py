@@ -56,6 +56,7 @@ class BaseAgent(Executor):
         self.personality = config.get("personality", "")
         self.focus_areas = config.get("focus_areas", [])
         self.tools = config.get("tools", [])
+        self.instructions = config.get("instructions", "")
 
         self.id = self.key
 
@@ -90,7 +91,9 @@ class BaseAgent(Executor):
                 instructions=instructions,
             )
 
-        return cls(chat_agent, config)
+        config_with_instructions = dict(config)
+        config_with_instructions["instructions"] = instructions
+        return cls(chat_agent, config_with_instructions)
 
     def metadata(self) -> AgentMetadata:
         """Return metadata for this agent.
@@ -120,10 +123,10 @@ class BaseAgent(Executor):
         """
         from .tools.context import set_agent_context
 
-        for i, msg in enumerate(
-            messages[-5:], start=max(0, len(messages) - 5)
-        ):  # Show last 5
-            msg_text = getattr(msg, "text", str(msg))[:100]  # First 100 chars
+        if self.instructions:
+            self.logger.debug(
+                "Agent '%s' instructions:\n%s", self.name, self.instructions
+            )
 
         # Set the agent context before running
         set_agent_context(self.key)
