@@ -129,53 +129,28 @@ class BaseTeamAgent(Executor, abc.ABC):
         instructions += f"PERSONALITY: {cls.personality}\n\n"
         instructions += f"FOCUS AREAS:\n{focus_text}\n"
 
-        if tools_info:
-            instructions += f"\n{tools_info}\n"
+        if cls.tools or tools_info:
+            tools_text = tools_info or (
+                "You have access to research tools:\n"
+                "- strategy_web_search: Web search for market data\n"
+                "- strategy_wikipedia_lookup: Background research\n"
+                "- strategy_fetch_url: Fetch public sources\n"
+                "\nUse these tools when you need real-world data."
+            )
+            instructions += f"\n{tools_text}\n"
 
         instructions += (
             "\nKeep responses short and high-signal (3-6 bullets or 1-2 short "
+            "paragraphs)."
         )
-        "paragraphs)."
-        return instructions
-
-    @classmethod
-    def build_instructions_with_tools(cls) -> str:
-        """Build instructions with tools (for Strategy agent)."""
-        focus_text = "\n".join(
-            f"{i+1}. {area}" for i, area in enumerate(cls.focus_areas)
-        )
-
-        tools_info = (
-            "You have access to research tools:\n"
-            "- strategy_web_search: Web search for market data\n"
-            "- strategy_wikipedia_lookup: Background research\n"
-            "- strategy_fetch_url: Fetch public sources\n"
-            "\nUse these tools when you need real-world data."
-        )
-
-        instructions = f"{cls.TEAM_MISSION}\n\n"
-        instructions += f"You are {cls.name}, {cls.role_description}\n\n"
-        instructions += f"PERSONALITY: {cls.personality}\n\n"
-        instructions += f"FOCUS AREAS:\n{focus_text}\n\n"
-        instructions += tools_info
-        instructions += (
-            "\n\nKeep responses short and high-signal (3-6 bullets or 1-2 short "
-        )
-        "paragraphs)."
         return instructions
 
     @classmethod
     async def create_agent(cls) -> ChatAgent:
         """Create an agent instance with optional custom model."""
         client = await cls._get_model_client()
+        instructions = cls.build_instructions()
 
-        # Build instructions
-        if cls.tools:
-            instructions = cls.build_instructions_with_tools()
-        else:
-            instructions = cls.build_instructions()
-
-        # Create agent
         if cls.tools:
             return client.create_agent(
                 name=f"{cls.__name__}",

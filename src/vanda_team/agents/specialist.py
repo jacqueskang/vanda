@@ -31,9 +31,3 @@ class BaseSpecialistAgent(BaseTeamAgent):
         """Build instructions with specialist requirements."""
         instructions = super().build_instructions(tools_info)
         return instructions + cls.specialist_instructions
-
-    @classmethod
-    def build_instructions_with_tools(cls) -> str:
-        """Build instructions with tools and specialist requirements."""
-        instructions = super().build_instructions_with_tools()
-        return instructions + cls.specialist_instructions
