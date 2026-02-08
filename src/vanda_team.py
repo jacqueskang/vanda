@@ -141,9 +141,12 @@ class VandaTeam:
             # Add successful response to results
             active_results.append(result)
 
-            # Add this response to the conversation for context
+            # Add this response to the conversation for context with agent identification
+            agent_name = self.agents[agent_key].name
             current_messages = current_messages + [
-                ChatMessage(role=Role.ASSISTANT, text=result["output"])
+                ChatMessage(
+                    role=Role.ASSISTANT, text=f"[{agent_name}]: {result['output']}"
+                )
             ]
 
         return active_results
