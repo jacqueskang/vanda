@@ -4,10 +4,10 @@ from typing import Never
 
 from agent_framework import ChatMessage, WorkflowContext, handler
 
-from .specialist import BaseSpecialistAgent
+from .base import BaseAgent
 
 
-class ReviewerAgent(BaseSpecialistAgent):
+class ReviewerAgent(BaseAgent):
     """Reviewer Agent: quality and final summary."""
 
     key = "reviewer"

@@ -2,10 +2,10 @@
 
 from agent_framework import ChatMessage, WorkflowContext, handler
 
-from .specialist import BaseSpecialistAgent
+from .base import BaseAgent
 
 
-class BusinessAnalystAgent(BaseSpecialistAgent):
+class BusinessAnalystAgent(BaseAgent):
     """Business Analyst Agent: requirements and roadmap."""
 
     key = "analyst"

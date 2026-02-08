@@ -2,13 +2,13 @@
 
 from agent_framework import ChatMessage, WorkflowContext, handler
 
-from .specialist import BaseSpecialistAgent
+from .base import BaseAgent
 from .tools.web_search import web_search
 from .tools.wikipedia_lookup import wikipedia_lookup
 from .tools.fetch_url import fetch_url
 
 
-class StrategyAgent(BaseSpecialistAgent):
+class StrategyAgent(BaseAgent):
     """Strategy Agent: market analysis and business strategy."""
 
     key = "strategy"

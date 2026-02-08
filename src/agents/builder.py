@@ -2,10 +2,10 @@
 
 from agent_framework import ChatMessage, WorkflowContext, handler
 
-from .specialist import BaseSpecialistAgent
+from .base import BaseAgent
 
 
-class BuilderAgent(BaseSpecialistAgent):
+class BuilderAgent(BaseAgent):
     """Builder Agent: implementation guidance and code generation."""
 
     key = "builder"
