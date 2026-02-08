@@ -55,9 +55,25 @@ class BaseTeamAgent(Executor, abc.ABC):
     async def create(cls) -> "BaseTeamAgent":
         """Factory method to create a fully initialized agent instance.
 
-        This handles both ChatAgent creation and wrapping it in the team agent.
+        This handles ChatAgent creation and wrapping it in the team agent.
         """
-        chat_agent = await cls.create_agent()
+        # Initialize model client
+        client = await cls._get_model_client()
+        instructions = cls.build_instructions()
+
+        # Create ChatAgent with or without tools
+        if cls.tools:
+            chat_agent = client.create_agent(
+                name=f"{cls.__name__}",
+                instructions=instructions,
+                tools=cls.tools,
+            )
+        else:
+            chat_agent = client.create_agent(
+                name=f"{cls.__name__}",
+                instructions=instructions,
+            )
+
         return cls(chat_agent)
 
     @abc.abstractmethod
@@ -155,20 +171,3 @@ class BaseTeamAgent(Executor, abc.ABC):
             "paragraphs)."
         )
         return instructions
-
-    @classmethod
-    async def create_agent(cls) -> ChatAgent:
-        """Create an agent instance with optional custom model."""
-        client = await cls._get_model_client()
-        instructions = cls.build_instructions()
-
-        if cls.tools:
-            return client.create_agent(
-                name=f"{cls.__name__}",
-                instructions=instructions,
-                tools=cls.tools,
-            )
-        return client.create_agent(
-            name=f"{cls.__name__}",
-            instructions=instructions,
-        )
