@@ -4,6 +4,7 @@ All-in-one launcher: Start business team + web UI with one command
 Usage: python scripts/run.py
 """
 
+import logging
 import os
 import sys
 import subprocess
@@ -24,6 +25,12 @@ def _pick_python(project_root: Path) -> str:
 
 
 def main():
+    level_name = os.getenv("LOG_LEVEL", "DEBUG").upper()
+    level = getattr(logging, level_name, logging.DEBUG)
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     print("=" * 60)
     print("[*] AI BUSINESS TEAM - Full Stack Launcher")
     print("=" * 60)

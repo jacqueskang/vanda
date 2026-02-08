@@ -1,5 +1,6 @@
 """Base team agent class with shared properties and methods."""
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any, Dict, Union
@@ -31,6 +32,8 @@ class BaseAgent(Executor):
         "sustainable unit economics. All guidance should align to this objective. Be brief and focus "
         "only on the most important points."
     )
+
+    logger = logging.getLogger(__name__)
 
     def __init__(self, agent: ChatAgent, config: Dict[str, Any]):
         """Initialize agent with ChatAgent and configuration dict.
@@ -118,14 +121,22 @@ class BaseAgent(Executor):
         from .tools.context import set_agent_context
 
         # Debug logging: show messages sent to this agent
-        print(
-            f"\n[DEBUG] Agent '{self.name}' ({self.key}) receiving {len(messages)} messages:"
+        self.logger.debug(
+            "Agent '%s' (%s) receiving %s messages",
+            self.name,
+            self.key,
+            len(messages),
         )
         for i, msg in enumerate(
             messages[-5:], start=max(0, len(messages) - 5)
         ):  # Show last 5
             msg_text = getattr(msg, "text", str(msg))[:100]  # First 100 chars
-            print(f"  [{i}] {getattr(msg, 'role', 'unknown')}: {msg_text}...")
+            self.logger.debug(
+                "[%s] %s: %s...",
+                i,
+                getattr(msg, "role", "unknown"),
+                msg_text,
+            )
 
         # Set the agent context before running
         set_agent_context(self.key)
@@ -138,7 +149,11 @@ class BaseAgent(Executor):
             for msg in response.messages:
                 if hasattr(msg, "text") and msg.text:
                     response_text += msg.text
-        print(f"[DEBUG] Agent '{self.name}' response: {response_text[:100]}...\n")
+        self.logger.debug(
+            "Agent '%s' response: %s...",
+            self.name,
+            response_text[:100],
+        )
 
         return response
 

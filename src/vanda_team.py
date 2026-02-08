@@ -1,5 +1,6 @@
 """VandaTeam class for managing the business team agents."""
 
+import logging
 from dataclasses import asdict
 from typing import Dict, List, Any, Optional
 
@@ -15,6 +16,8 @@ from agents import (
 
 class VandaTeam:
     """Manages the Vanda AI business team and agent interactions."""
+
+    logger = logging.getLogger(__name__)
 
     def __init__(self, agents: Dict[str, BaseAgent], router: RouterAgent):
         """Initialize the team with a dictionary of agents.
@@ -125,13 +128,17 @@ class VandaTeam:
         Returns:
             List of agent response dictionaries.
         """
-        print(
-            f"\n[DEBUG] VandaTeam.determine_responders called with {len(messages)} messages"
+        self.logger.debug(
+            "VandaTeam.determine_responders called with %s messages",
+            len(messages),
         )
 
         # Use the router agent to determine which agents should respond
         router_recommendations = await self.router.analyze_and_route(messages)
-        print(f"[DEBUG] Router recommended agents: {router_recommendations}")
+        self.logger.debug(
+            "Router recommended agents: %s",
+            router_recommendations,
+        )
 
         active_results = []
         current_messages = messages

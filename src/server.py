@@ -1,5 +1,7 @@
 """HTTP server entry point for the business team."""
 
+import logging
+import logging.config
 import sys
 from pathlib import Path
 from typing import Any
@@ -27,6 +29,21 @@ async def main() -> None:
         from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
         from starlette.routing import Route
         import uvicorn
+
+        logging_config = uvicorn.config.LOGGING_CONFIG.copy()
+        logging_config["loggers"] = logging_config.get("loggers", {}).copy()
+        logging_config["loggers"]["uvicorn.access"] = {
+            "handlers": ["default"],
+            "level": "WARNING",
+            "propagate": False,
+        }
+        for logger_name in ("agents", "vanda_team", "server"):
+            logging_config["loggers"][logger_name] = {
+                "handlers": ["default"],
+                "level": "DEBUG",
+                "propagate": False,
+            }
+        logging.config.dictConfig(logging_config)
 
         print("\n" + "=" * 60)
         print("[*] AI BUSINESS TEAM - Multi-Agent Coordinator")
@@ -159,7 +176,13 @@ async def main() -> None:
         print("\n[+] Send requests to: POST http://127.0.0.1:8088/chat")
         print("=" * 60 + "\n")
 
-        config = uvicorn.Config(app, host="0.0.0.0", port=8088, log_level="info")
+        config = uvicorn.Config(
+            app,
+            host="0.0.0.0",
+            port=8088,
+            log_level="info",
+            access_log=False,
+        )
         server = uvicorn.Server(config)
         await server.serve()
 
