@@ -1,6 +1,6 @@
 """AI Business Team - Multi-agent coordinator system."""
 
-from typing import Dict, Optional
+from typing import Dict
 
 from .analyst import BusinessAnalystAgent
 from .architect import TechnicalArchitectAgent
@@ -19,16 +19,9 @@ AGENT_METADATA: Dict[str, AgentMetadata] = {
     CEOAssistantAgent.key: CEOAssistantAgent.metadata(),
 }
 
-_team_agents_cache: Optional[Dict[str, BaseAgent]] = None
-
 
 async def create_all_team_agents() -> Dict[str, BaseAgent]:
-    """Create fully initialized team agent instances (cached for performance)."""
-    global _team_agents_cache
-
-    if _team_agents_cache is not None:
-        return _team_agents_cache
-
+    """Create fully initialized team agent instances."""
     strategy_agent = await StrategyAgent.create()
     architect_agent = await TechnicalArchitectAgent.create()
     analyst_agent = await BusinessAnalystAgent.create()
@@ -36,7 +29,7 @@ async def create_all_team_agents() -> Dict[str, BaseAgent]:
     reviewer_agent = await ReviewerAgent.create()
     assistant_agent = await CEOAssistantAgent.create()
 
-    _team_agents_cache = {
+    return {
         "strategy": strategy_agent,
         "architect": architect_agent,
         "analyst": analyst_agent,
@@ -44,8 +37,6 @@ async def create_all_team_agents() -> Dict[str, BaseAgent]:
         "reviewer": reviewer_agent,
         "assistant": assistant_agent,
     }
-
-    return _team_agents_cache
 
 
 __all__ = [
