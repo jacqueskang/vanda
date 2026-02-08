@@ -117,10 +117,30 @@ class BaseAgent(Executor):
         """
         from .tools.context import set_agent_context
 
+        # Debug logging: show messages sent to this agent
+        print(
+            f"\n[DEBUG] Agent '{self.name}' ({self.key}) receiving {len(messages)} messages:"
+        )
+        for i, msg in enumerate(
+            messages[-5:], start=max(0, len(messages) - 5)
+        ):  # Show last 5
+            msg_text = getattr(msg, "text", str(msg))[:100]  # First 100 chars
+            print(f"  [{i}] {getattr(msg, 'role', 'unknown')}: {msg_text}...")
+
         # Set the agent context before running
         set_agent_context(self.key)
         # Run the agent
-        return await self.agent.run(messages)
+        response = await self.agent.run(messages)
+
+        # Debug logging: show agent response
+        response_text = ""
+        if hasattr(response, "messages") and response.messages:
+            for msg in response.messages:
+                if hasattr(msg, "text") and msg.text:
+                    response_text += msg.text
+        print(f"[DEBUG] Agent '{self.name}' response: {response_text[:100]}...\n")
+
+        return response
 
     @staticmethod
     async def _get_model_client(

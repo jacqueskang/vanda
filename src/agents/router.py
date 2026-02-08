@@ -46,10 +46,12 @@ class RouterAgent(BaseAgent):
         last_message_text = self._get_last_message_text(messages)
         mentioned_agents = self._extract_mentioned_agents(last_message_text)
         if mentioned_agents:
+            print(f"[DEBUG] Router: Explicitly mentioned agents: {mentioned_agents}")
             return mentioned_agents
 
         # Detect last agent who responded for context continuity
         last_agent_key = self._get_last_responding_agent(messages)
+        print(f"[DEBUG] Router: Last responding agent: {last_agent_key}")
 
         # Build the routing analysis prompt with full history
         routing_prompt = self._build_routing_prompt(messages, last_agent_key)
@@ -63,6 +65,7 @@ class RouterAgent(BaseAgent):
 
         # Parse the response to get agent keys
         agent_keys = self._parse_agent_recommendations(response_text)
+        print(f"[DEBUG] Router: Parsed agent keys from LLM: {agent_keys}")
 
         # Prioritize last agent if they should continue the conversation
         if last_agent_key and last_agent_key in self.team.agents:

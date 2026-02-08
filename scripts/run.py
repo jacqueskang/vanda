@@ -23,20 +23,6 @@ def _pick_python(project_root: Path) -> str:
     return sys.executable
 
 
-def _print_log_tail(log_path: Path, lines: int = 40) -> None:
-    if not log_path.exists():
-        return
-    try:
-        content = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
-        tail = content[-lines:] if len(content) > lines else content
-        if tail:
-            print(f"\n--- {log_path.name} (last {len(tail)} lines) ---")
-            for line in tail:
-                print(line)
-    except Exception:
-        return
-
-
 def main():
     print("=" * 60)
     print("[*] AI BUSINESS TEAM - Full Stack Launcher")
@@ -61,19 +47,12 @@ def main():
     
     python_cmd = _pick_python(project_root)
 
-    logs_dir = project_root / "logs"
-    logs_dir.mkdir(exist_ok=True)
-
-    business_log = logs_dir / "business_team.log"
-
     # Start business_team.py
     print("[*] Starting business team backend...")
     try:
-        business_log_fp = business_log.open("w", encoding="utf-8")
         business_team_proc = subprocess.Popen(
             [python_cmd, str(scripts_dir / "business_team.py")],
-            stdout=business_log_fp,
-            stderr=business_log_fp,
+            # Remove stdout/stderr redirection to show output in console
             stdin=subprocess.DEVNULL,
             cwd=str(project_root),
         )
@@ -112,10 +91,6 @@ def main():
         except:
             business_team_proc.kill()
         
-        try:
-            business_log_fp.close()
-        except Exception:
-            pass
         print("[+] All servers stopped")
         sys.exit(0)
     
@@ -126,7 +101,6 @@ def main():
         while True:
             if business_team_proc.poll() is not None:
                 print("[-] Business team process ended")
-                _print_log_tail(business_log)
                 sys.exit(1)
             
             time.sleep(1)
