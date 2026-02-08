@@ -18,10 +18,8 @@ DEFAULT_GITHUB_REPO = "jacqueskang/vanda-project"
 def _get_github_headers() -> Dict[str, str]:
     """Get GitHub API headers with authentication.
 
-    Token priority:
-    1. Current executing agent's token (ANALYST_GITHUB_TOKEN, ARCHITECT_GITHUB_TOKEN, etc.)
-    2. Other agent-specific tokens
-    3. Shared token: GITHUB_TOKEN
+    Token requirement:
+    - Current executing agent's token (ANALYST_GITHUB_TOKEN, ARCHITECT_GITHUB_TOKEN, etc.)
     """
     # Check current agent's token first
     current_agent = get_agent_context()
@@ -34,29 +32,10 @@ def _get_github_headers() -> Dict[str, str]:
                 "Accept": "application/vnd.github.v3+json",
             }
 
-    # Check for other agent-specific tokens as fallback
-    for agent_name in ["analyst", "architect", "builder", "reviewer"]:
-        token_var = f"{agent_name.upper()}_GITHUB_TOKEN"
-        token = os.getenv(token_var)
-        if token:
-            return {
-                "Authorization": f"token {token}",
-                "Accept": "application/vnd.github.v3+json",
-            }
-
-    # Fall back to shared token
-    token = os.getenv("GITHUB_TOKEN")
-    if not token:
-        raise ValueError(
-            "No GitHub token found. Set one of: ANALYST_GITHUB_TOKEN, "
-            "ARCHITECT_GITHUB_TOKEN, BUILDER_GITHUB_TOKEN, REVIEWER_GITHUB_TOKEN, "
-            "or GITHUB_TOKEN"
-        )
-
-    return {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json",
-    }
+    raise ValueError(
+        "No agent-specific GitHub token found for the current agent. "
+        "Set {AGENT_KEY}_GITHUB_TOKEN (e.g., ANALYST_GITHUB_TOKEN)."
+    )
 
 
 @tool
