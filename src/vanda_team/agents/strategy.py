@@ -1,6 +1,6 @@
 """Strategy Agent: business strategy and market analysis."""
 
-from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
+from agent_framework import ChatMessage, WorkflowContext, handler
 
 from vanda_team.agents.specialist import BaseSpecialistAgent
 from .tools.web_search import web_search
@@ -38,9 +38,6 @@ class StrategyAgent(BaseSpecialistAgent):
         "Monetization models (commission, subscription, etc.)",
         "Regulatory challenges and risk mitigation",
     ]
-
-    def __init__(self, agent: ChatAgent):
-        super().__init__(agent)
 
     @handler
     async def handle_business_inquiry(

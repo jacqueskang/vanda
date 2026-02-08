@@ -3,7 +3,7 @@
 import os
 from typing import List
 
-from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
+from agent_framework import ChatMessage, WorkflowContext, handler
 
 from vanda_team.agents.base import BaseAgent
 
@@ -43,9 +43,6 @@ class CEOAssistantAgent(BaseAgent):
         "Strategy/market/business → @Claire | Product/requirements/roadmap → @Sophie | "
         "Quality/review → @Nina | Only answer general greetings/small talk yourself",
     ]
-
-    def __init__(self, agent: ChatAgent):
-        super().__init__(agent)
 
     def should_respond(self, messages: List[ChatMessage]) -> bool:
         """CEO Assistant responds if mentioned or if no specialists are mentioned."""

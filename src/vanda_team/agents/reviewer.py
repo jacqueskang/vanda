@@ -2,7 +2,7 @@
 
 from typing import Never
 
-from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
+from agent_framework import ChatMessage, WorkflowContext, handler
 
 from vanda_team.agents.specialist import BaseSpecialistAgent
 
@@ -35,9 +35,6 @@ class ReviewerAgent(BaseSpecialistAgent):
         "Validating assumptions and fact-checking",
         "Producing a clean executive summary",
     ]
-
-    def __init__(self, agent: ChatAgent):
-        super().__init__(agent)
 
     @handler
     async def handle_review(

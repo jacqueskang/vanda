@@ -1,6 +1,6 @@
 """Builder Agent: implementation and code generation."""
 
-from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
+from agent_framework import ChatMessage, WorkflowContext, handler
 
 from vanda_team.agents.specialist import BaseSpecialistAgent
 
@@ -34,9 +34,6 @@ class BuilderAgent(BaseSpecialistAgent):
         "Deployment strategies",
         "Security and performance considerations",
     ]
-
-    def __init__(self, agent: ChatAgent):
-        super().__init__(agent)
 
     @handler
     async def handle_implementation(

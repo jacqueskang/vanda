@@ -1,6 +1,6 @@
 """Business Analyst Agent: product planning and requirements."""
 
-from agent_framework import ChatAgent, ChatMessage, WorkflowContext, handler
+from agent_framework import ChatMessage, WorkflowContext, handler
 
 from vanda_team.agents.specialist import BaseSpecialistAgent
 
@@ -34,9 +34,6 @@ class BusinessAnalystAgent(BaseSpecialistAgent):
         "Success metrics and KPIs",
         "User stories and acceptance criteria",
     ]
-
-    def __init__(self, agent: ChatAgent):
-        super().__init__(agent)
 
     @handler
     async def handle_analysis(
