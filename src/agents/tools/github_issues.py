@@ -115,15 +115,6 @@ def list_backlog(filter_labels: str = "", state: str = "open") -> str:
     Returns:
         JSON string with list of backlog items
     """
-    approved, message = require_tool_approval(
-        tool_name="list_backlog",
-        summary=summarize_text(
-            "List GitHub issues", f"labels={filter_labels}, state={state}"
-        ),
-        arguments={"filter_labels": filter_labels, "state": state},
-    )
-    if not approved:
-        return message
     try:
         import requests
 
@@ -244,13 +235,6 @@ def get_backlog_item(issue_number: int) -> str:
     Returns:
         JSON string with full issue details
     """
-    approved, message = require_tool_approval(
-        tool_name="get_backlog_item",
-        summary=summarize_text("Get GitHub issue", f"#{issue_number}"),
-        arguments={"issue_number": issue_number},
-    )
-    if not approved:
-        return message
     try:
         import requests
 
