@@ -39,10 +39,13 @@ class VandaTeam:
         # Extract router from agents (it's loaded like any other agent)
         router = agents.pop("router")
 
-        # Configure router with team agents for dynamic routing
-        router.set_team_agents(agents)  # type: ignore
+        # Create team instance
+        team = cls(agents, router)  # type: ignore[arg-type]
 
-        return cls(agents, router)  # type: ignore[arg-type]
+        # Configure router with team reference for dynamic routing
+        router.set_team(team)  # type: ignore
+
+        return team
 
     @staticmethod
     def extract_response_text(response: Any) -> str:
@@ -144,6 +147,21 @@ class VandaTeam:
             ]
 
         return active_results
+
+    def get_team_description(self) -> str:
+        """Build team description from agents for routing context.
+
+        Returns:
+            str: Formatted team member descriptions.
+        """
+        descriptions = []
+        for key, agent in self.agents.items():
+            desc = f"- {agent.name} ({agent.role_title}, key='{key}'): "
+            if agent.focus_areas:
+                desc += ", ".join(agent.focus_areas[:2])
+            descriptions.append(desc)
+
+        return "\n".join(descriptions)
 
     def get_agents_list(self) -> List[Dict[str, Any]]:
         """Get list of available agents with their metadata.

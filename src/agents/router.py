@@ -19,15 +19,15 @@ class RouterAgent(BaseAgent):
             config: Configuration dictionary for the agent.
         """
         super().__init__(agent, config)
-        self.team_agents: Dict[str, BaseAgent] = {}
+        self.team: Any = None
 
-    def set_team_agents(self, agents: Dict[str, BaseAgent]) -> None:
-        """Set the team agents for dynamic routing configuration.
+    def set_team(self, team: Any) -> None:
+        """Set the team reference for dynamic routing configuration.
 
         Args:
-            agents: Dictionary of agent key to BaseAgent instances.
+            team: VandaTeam instance for accessing team context.
         """
-        self.team_agents = agents
+        self.team = team
 
     async def analyze_and_route(self, messages: List[ChatMessage]) -> List[str]:
         """Analyze chat history and determine which agents should respond.
@@ -81,7 +81,7 @@ class RouterAgent(BaseAgent):
         )
 
         # Dynamically build team member descriptions from team_agents
-        team_description = self._build_team_description()
+        team_description = self.team.get_team_description()
 
         routing_instructions = f"""You are a message router for a business team. Analyze the conversation
 and determine which team members should respond next.
@@ -102,21 +102,6 @@ Rules:
 - Return empty array if you're really unsure"""
 
         return routing_instructions
-
-    def _build_team_description(self) -> str:
-        """Build dynamic team description from team agents.
-
-        Returns:
-            str: Formatted team member descriptions.
-        """
-        descriptions = []
-        for key, agent in self.team_agents.items():
-            desc = f"- {agent.name} ({agent.role_title}, key='{key}'): "
-            if agent.focus_areas:
-                desc += ", ".join(agent.focus_areas[:2])
-            descriptions.append(desc)
-
-        return "\n".join(descriptions)
 
     @staticmethod
     def _extract_response_text(response: Any) -> str:
