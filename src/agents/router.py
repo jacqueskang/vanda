@@ -50,8 +50,9 @@ class RouterAgent(BaseAgent):
     async def analyze_and_route(self, messages: List[ChatMessage]) -> List[str]:
         """Analyze chat history and determine which agents should respond.
 
-        If the last message explicitly mentions any agents by name, route to them directly.
-        Otherwise, use LLM-based analysis to determine appropriate agents.
+        Uses LLM-based analysis to determine appropriate agents based on context
+        and conversation content. Automatically learns agent names, roles, and
+        expertise areas from the team composition.
 
         Args:
             messages: List of chat messages to analyze.
@@ -59,13 +60,6 @@ class RouterAgent(BaseAgent):
         Returns:
             List of agent keys that should respond to this message.
         """
-        # Check if the last message mentions specific agents
-        if messages:
-            last_message_text = getattr(messages[-1], "text", "")
-            mentioned_agents = self._extract_mentioned_agents(last_message_text)
-            if mentioned_agents:
-                return mentioned_agents
-
         # Build the routing analysis prompt
         routing_prompt = self._build_routing_prompt(messages)
 
@@ -84,39 +78,6 @@ class RouterAgent(BaseAgent):
             agent_keys = ["assistant"]
 
         return agent_keys
-
-    def _extract_mentioned_agents(self, text: str) -> List[str]:
-        """Extract agent names mentioned in the text using @ notation.
-
-        Dynamically builds mapping from actual team agents.
-
-        Args:
-            text: Text to search for agent mentions.
-
-        Returns:
-            List of agent keys that are mentioned.
-        """
-        import re
-
-        # Dynamically build agent name to key mapping from team agents
-        agent_name_to_key = {}
-        for agent_key, agent in self.team_agents.items():
-            agent_name = agent.name.lower() if agent.name else ""
-            if agent_name:
-                agent_name_to_key[agent_name] = agent_key
-
-        # Find all @mentions in the text
-        mentions = re.findall(r"@(\w+)", text, re.IGNORECASE)
-
-        # Convert mentions to agent keys
-        mentioned_agents: List[str] = []
-        for mention in mentions:
-            found_agent_key: str | None = agent_name_to_key.get(mention.lower())
-            if found_agent_key:
-                if found_agent_key not in mentioned_agents:
-                    mentioned_agents.append(found_agent_key)
-
-        return mentioned_agents
 
     def _build_routing_prompt(self, messages: List[ChatMessage]) -> str:
         """Build the prompt for routing analysis.
