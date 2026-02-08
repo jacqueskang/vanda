@@ -414,43 +414,6 @@
             z-index: 10;
         }
 
-        #selectedAgents {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .agent-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(135deg, #1e3a8a 0%, #2d3748 100%);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .agent-badge img {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-        }
-
-        .agent-badge .btn-close {
-            margin-left: 4px;
-            padding: 0;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-
-        .agent-badge .btn-close:hover {
-            opacity: 1;
-        }
-
         .input-wrapper {
             display: flex;
             gap: 12px;
@@ -533,7 +496,6 @@
             <div class="chat-messages" id="chatArea"></div>
             
             <div class="input-section">
-                <div id="selectedAgents"></div>
                 <div class="input-wrapper">
                     <div class="input-container">
                         <input type="text" id="questionInput" class="form-control" placeholder="Type @ to mention agents, then ask your question..." />
@@ -557,12 +519,8 @@
         const sendBtn = document.getElementById("sendBtn");
         const statusIndicator = document.getElementById("statusIndicator");
         const agentSuggestions = document.getElementById("agentSuggestions");
-        const selectedAgentsDiv = document.getElementById("selectedAgents");
-        
         // Agent list - will be loaded dynamically from backend
         let AGENTS = [];
-        
-        let selectedAgents = [];
         let currentMention = "";
         let mentionStartIndex = -1;
         
@@ -715,23 +673,24 @@
         }
         
         function selectAgent(key, name, avatar) {
-            // Replace @mention with @name in input
+            // Check if we're replacing an @ mention (from autocomplete)
             let text = questionInput.value;
             const atIndex = text.lastIndexOf("@");
-            if (atIndex !== -1) {
+            
+            if (atIndex !== -1 && atIndex < questionInput.selectionStart) {
+                // Replace @mention with @name (autocomplete scenario)
                 const beforeAt = text.substring(0, atIndex);
                 const afterCursor = text.substring(questionInput.selectionStart);
                 text = beforeAt + "@" + name + " " + afterCursor;
                 questionInput.value = text;
-                // Set cursor position after the inserted mention
                 const newPos = beforeAt.length + name.length + 2;
                 questionInput.setSelectionRange(newPos, newPos);
-            }
-            
-            // Add to selected if not already selected
-            if (!selectedAgents.find(a => a.key === key)) {
-                selectedAgents.push({ key, name, avatar });
-                renderSelectedAgents();
+            } else {
+                // Just append @name to input (clicked from sidebar)
+                const currentValue = questionInput.value;
+                const needsSpace = currentValue && !currentValue.endsWith(" ");
+                questionInput.value = currentValue + (needsSpace ? " " : "") + "@" + name + " ";
+                questionInput.setSelectionRange(questionInput.value.length, questionInput.value.length);
             }
             
             closeSuggestions();
@@ -752,44 +711,17 @@
                 questionInput.setSelectionRange(newPos, newPos);
             }
             
-            // Add all agents to selected
-            selectedAgents = [];
-            AGENTS.forEach(agent => {
-                selectedAgents.push({ key: agent.key, name: agent.name, avatar: agent.avatar });
-            });
-            renderSelectedAgents();
-            
             closeSuggestions();
             questionInput.focus();
-        }
-        
-        function renderSelectedAgents() {
-            selectedAgentsDiv.innerHTML = selectedAgents.map(agent => `
-                <span class="agent-badge">
-                    <img src="${agent.avatar}" alt="${agent.name}" />
-                    <span>${agent.name}</span>
-                    <button type="button" class="btn-close btn-close-white" onclick="removeAgent('${agent.key}')" aria-label="Remove"></button>
-                </span>
-            `).join("");
-        }
-        
-        function removeAgent(key) {
-            selectedAgents = selectedAgents.filter(a => a.key !== key);
-            renderSelectedAgents();
         }
         
         async function sendQuestion() {
             const question = questionInput.value.trim();
             if (!question) return;
             
-            // Save selected agents BEFORE clearing the UI
-            const agentsToSend = selectedAgents.map(a => a.key);
-            
             // Add user message to chat
             addMessage(question, "user");
             questionInput.value = "";
-            selectedAgents = [];
-            renderSelectedAgents();
             questionInput.focus();
             
             // Show loading
@@ -798,8 +730,7 @@
             
             try {
                 const payload = {
-                    messages: [{ role: "user", text: question }],
-                    agents: agentsToSend.length > 0 ? agentsToSend : null
+                    messages: [{ role: "user", text: question }]
                 };
                 
                 console.log("Sending request to", ENDPOINT, "with payload:", payload);
