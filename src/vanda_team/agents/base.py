@@ -2,14 +2,14 @@
 
 import abc
 from typing import Union, Dict, Any, List
-from agent_framework import ChatAgent
+from agent_framework import ChatAgent, Executor
 from agent_framework.azure import AzureOpenAIChatClient
 from agent_framework.openai import OpenAIChatClient
 from vanda_team.model_client import get_model_client
 from agent_framework import ChatMessage
 
 
-class BaseTeamAgent(abc.ABC):
+class BaseTeamAgent(Executor, abc.ABC):
     """Base agent with shared metadata."""
 
     # Team mission (shared across all agents)

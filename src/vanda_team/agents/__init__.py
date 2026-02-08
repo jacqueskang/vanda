@@ -81,11 +81,11 @@ async def get_or_create_workflow() -> Any:
 
     workflow = (
         WorkflowBuilder()
-        .set_start_executor(strategy)  # type: ignore
-        .add_edge(strategy, architect)  # type: ignore
-        .add_edge(architect, analyst)  # type: ignore
-        .add_edge(analyst, builder)  # type: ignore
-        .add_edge(builder, reviewer)  # type: ignore
+        .set_start_executor(strategy)
+        .add_edge(strategy, architect)
+        .add_edge(architect, analyst)
+        .add_edge(analyst, builder)
+        .add_edge(builder, reviewer)
         .build()
     )
 
