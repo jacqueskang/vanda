@@ -53,6 +53,8 @@ class VandaTeam:
         for agent_class in cls.AGENT_CLASSES:
             agents[agent_class.key] = await agent_class.create()
         router = await cls.ROUTER_CLASS.create()
+        # Configure router with team agents for dynamic routing
+        router.set_team_agents(agents)  # type: ignore
         return cls(agents, router)  # type: ignore
 
     @staticmethod
