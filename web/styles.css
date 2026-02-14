@@ -233,6 +233,35 @@ body {
     color: #334155;
 }
 
+.role-badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-badge.propose {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.role-badge.critique {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.role-badge.evaluate {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.role-badge.respond {
+    background: #f3f4f6;
+    color: #374151;
+}
+
 .agent-avatar {
     width: 28px;
     height: 28px;

@@ -32,7 +32,7 @@ class RouterAgent(BaseAgent):
         """
         self.team = team
 
-    async def analyze_and_route(self, messages: List[ChatMessage]) -> List[str]:
+    async def analyze_and_route(self, messages: List[ChatMessage]) -> List[Dict[str, str]]:
         """Analyze chat history and determine which agents should respond.
 
         Uses LLM-based analysis to determine appropriate agents based on context
@@ -43,17 +43,18 @@ class RouterAgent(BaseAgent):
             messages: List of chat messages to analyze.
 
         Returns:
-            List of agent keys that should respond to this message.
+            List of dicts with 'key' and 'role' for each agent to respond.
         """
         # If the last message explicitly mentions agents, prioritize those
         last_message_text = self._get_last_message_text(messages)
-        mentioned_agents = self._extract_mentioned_agents(last_message_text)
-        if mentioned_agents:
+        mentioned_agent_keys = self._extract_mentioned_agents(last_message_text)
+        if mentioned_agent_keys:
             self.logger.debug(
                 "Router: Explicitly mentioned agents: %s",
-                mentioned_agents,
+                mentioned_agent_keys,
             )
-            return mentioned_agents
+            # Convert to role format
+            return [{"key": k, "role": "respond"} for k in mentioned_agent_keys]
 
         # Detect last agent who responded for context continuity
         last_agent_key = self._get_last_responding_agent(messages)
@@ -69,27 +70,18 @@ class RouterAgent(BaseAgent):
         response = await self.run_with_context(analysis_messages)
         response_text = self._extract_response_text(response)
 
-        # Parse the response to get agent keys
-        agent_keys = self._parse_agent_recommendations(response_text)
-
-        # Prioritize last agent if they should continue the conversation
-        if last_agent_key and last_agent_key in self.team.agents:
-            # If router didn't select the last agent but no explicit agent was chosen,
-            # consider continuing with the same agent for conversation continuity
-            if last_agent_key not in agent_keys and not mentioned_agents:
-                # Add last agent as first priority if the conversation seems to be continuing
-                if self._should_continue_with_last_agent(last_message_text):
-                    agent_keys.insert(0, last_agent_key)
+        # Parse the response to get agent roles
+        agent_roles = self._parse_agent_roles(response_text)
 
         # Default to assistant if no agents are recommended
-        if not agent_keys:
-            agent_keys = ["assistant"]
+        if not agent_roles:
+            agent_roles = [{"key": "assistant", "role": "respond"}]
 
-        # Enforce single agent when there is no explicit mention
-        if len(agent_keys) > 1:
-            agent_keys = [agent_keys[0]]
+        # Limit to max 3 agents
+        if len(agent_roles) > 3:
+            agent_roles = agent_roles[:3]
 
-        return agent_keys
+        return agent_roles
 
     def _build_routing_prompt(
         self, messages: List[ChatMessage], last_agent_key: Optional[str] = None
@@ -140,7 +132,7 @@ class RouterAgent(BaseAgent):
                 )
 
         routing_instructions = f"""You are a message router for a business team. Analyze the conversation
-and determine which team members should respond next.
+and determine which team members should respond, and in what sequence/role.
 
 TEAM MEMBERS:
 {team_description}{last_agent_note}
@@ -148,14 +140,20 @@ TEAM MEMBERS:
 CONVERSATION HISTORY (RECENT CONTEXT):
 {context}
 
-Based on the conversation, which team members should respond? Return ONLY a JSON object with this format:
-{{"agent_keys": ["key1", "key2"]}}
+Based on the conversation, which team members should respond? Assign roles to enable structured collaboration:
+- "propose": Agent makes initial proposal or suggestion
+- "critique": Agent evaluates or critiques the proposal
+- "evaluate": Agent reviews and provides final assessment
+- "respond": Agent gives a direct answer
+
+Return ONLY a JSON object with this format (max 3 agents):
+{{"agents": [{{"key": "agent_key", "role": "propose"}}, {{"key": "agent_key", "role": "critique"}}]}}
 
 Rules:
-- Return only agent keys that are relevant to the message
-- Prioritize the last responding agent if the user is continuing the same topic
-- Multiple agents can respond for multidisciplinary questions
-- If unsure, default to 'assistant'
+- Assign clear roles to enable collaboration (propose -> critique -> evaluate)
+- Order agents in the sequence they should speak
+- Use "respond" role for simple questions that don't need collaboration
+- If unsure, default to a single agent with "respond" role
 """
 
         return routing_instructions
@@ -311,8 +309,44 @@ Rules:
         return response_text.strip()
 
     @staticmethod
-    def _parse_agent_recommendations(response_text: str) -> List[str]:
-        """Parse agent recommendations from LLM response.
+    def _parse_agent_roles(response_text: str) -> List[Dict[str, str]]:
+        """Parse agent roles from LLM response.
+
+        Args:
+            response_text: Response text from the router LLM.
+
+        Returns:
+            List of dicts with 'key' and 'role' (propose/critique/evaluate/respond).
+        """
+        import re
+
+        try:
+            json_start = response_text.find("{")
+            json_end = response_text.rfind("}") + 1
+            if json_start != -1 and json_end > json_start:
+                json_str = response_text[json_start:json_end]
+                data = json.loads(json_str)
+                agents = data.get("agents", [])
+                if isinstance(agents, list) and agents:
+                    validated = []
+                    for a in agents:
+                        if isinstance(a, dict):
+                            key = a.get("key", "")
+                            role = a.get("role", "respond")
+                            if key:
+                                validated.append({"key": key, "role": role})
+                    if validated:
+                        return validated
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+        # Fallback: try to extract agent names and infer propose role
+        agent_keys = RouterAgent._parse_agent_recommendations_fallback(response_text)
+        return [{"key": k, "role": "respond"} for k in agent_keys]
+
+    @staticmethod
+    def _parse_agent_recommendations_fallback(response_text: str) -> List[str]:
+        """Parse agent recommendations from LLM response (fallback).
 
         Args:
             response_text: Response text from the router LLM.

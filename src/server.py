@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import json
 from agent_framework import Role, ChatMessage
 
 from vanda_team import VandaTeam
@@ -26,7 +27,7 @@ async def main() -> None:
     try:
         from starlette.applications import Starlette
         from starlette.middleware.cors import CORSMiddleware
-        from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
+        from starlette.responses import FileResponse, JSONResponse, PlainTextResponse, StreamingResponse
         from starlette.routing import Mount, Route
         from starlette.staticfiles import StaticFiles
         import uvicorn
@@ -140,6 +141,10 @@ async def main() -> None:
                     status_code=500,
                 )
 
+        async def chat_stream_handler(request: Any) -> Any:
+            """Handle streaming chat requests - placeholder."""
+            return JSONResponse({"error": "Stream endpoint disabled"})
+
         async def health_handler(request: Any) -> Any:
             return JSONResponse({"status": "ok"})
 
@@ -163,6 +168,7 @@ async def main() -> None:
                 Route("/health", health_handler, methods=["GET"]),
                 Route("/agents", agents_handler, methods=["GET"]),
                 Route("/chat", chat_handler, methods=["POST", "OPTIONS"]),
+                Route("/chat/stream", chat_stream_handler, methods=["POST", "OPTIONS"]),
                 Route("/run", chat_handler, methods=["POST", "OPTIONS"]),
                 Mount("/", StaticFiles(directory=str(web_dir)), name="static"),
             ]
