@@ -6,7 +6,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-import json
 from agent_framework import Role, ChatMessage
 
 from vanda_team import VandaTeam
@@ -27,7 +26,11 @@ async def main() -> None:
     try:
         from starlette.applications import Starlette
         from starlette.middleware.cors import CORSMiddleware
-        from starlette.responses import FileResponse, JSONResponse, PlainTextResponse, StreamingResponse
+        from starlette.responses import (
+            FileResponse,
+            JSONResponse,
+            PlainTextResponse,
+        )
         from starlette.routing import Mount, Route
         from starlette.staticfiles import StaticFiles
         import uvicorn
@@ -55,7 +58,7 @@ async def main() -> None:
         team = await VandaTeam.create()
 
         root_dir = Path(__file__).resolve().parents[1]
-        ui_file = root_dir / "web" / "index.html"
+        ui_file = root_dir / "dist" / "ui" / "index.html"
 
         async def chat_handler(request: Any) -> Any:
             """Handle chat requests."""
@@ -158,8 +161,8 @@ async def main() -> None:
                 return FileResponse(ui_file)
             return PlainTextResponse("index.html not found", status_code=404)
 
-        # Get the web directory path
-        web_dir = root_dir / "web"
+        # Get the UI directory path (prefer built dist)
+        ui_dir = root_dir / "dist" / "ui"
 
         app = Starlette(
             routes=[
@@ -170,7 +173,7 @@ async def main() -> None:
                 Route("/chat", chat_handler, methods=["POST", "OPTIONS"]),
                 Route("/chat/stream", chat_stream_handler, methods=["POST", "OPTIONS"]),
                 Route("/run", chat_handler, methods=["POST", "OPTIONS"]),
-                Mount("/", StaticFiles(directory=str(web_dir)), name="static"),
+                Mount("/", StaticFiles(directory=str(ui_dir)), name="static"),
             ]
         )
 

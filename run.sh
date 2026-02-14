@@ -9,4 +9,4 @@ if [[ ! -f "$VENV_PYTHON" ]]; then
   exit 1
 fi
 
-"$VENV_PYTHON" scripts/run.py
+exec "$VENV_PYTHON" -c "import sys; sys.path.insert(0, 'src'); import asyncio; from server import main; asyncio.run(main())"

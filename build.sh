@@ -12,9 +12,17 @@ if [[ ! -f "$VENV_PYTHON" ]]; then
   exit 1
 fi
 
-echo "Running code quality checks..."
+echo "Running Python code quality checks..."
 "$VENV_BLACK" src/ && echo "✅ Code formatted with black"
 "$VENV_FLAKE8" src/ || (echo "⚠️  Linting issues found (non-blocking)" >&2)
 "$VENV_MYPY" src/ || (echo "⚠️  Type checking issues found (non-blocking)" >&2)
 
+echo ""
+echo "Building Vue.js frontend..."
+cd src/ui
+npm install
+npm run build
+cd ..
+
+echo "✅ Frontend built to dist/ui/"
 echo "Checks completed (warnings above are non-blocking)"

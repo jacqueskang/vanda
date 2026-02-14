@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import asdict
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, AsyncIterator
 
 from agent_framework import Role, ChatMessage
 
@@ -151,7 +151,7 @@ class VandaTeam:
             current_messages = current_messages + [
                 ChatMessage(
                     role=Role.SYSTEM,
-                    text=f"Collaboration sequence: {role_context}. Each agent should build on previous responses."
+                    text=f"Collaboration sequence: {role_context}. Each agent should build on previous responses.",
                 )
             ]
 
@@ -168,7 +168,9 @@ class VandaTeam:
                 continue
 
             # Add role context to prompt
-            turn_messages = self._add_role_context(current_messages, role, turn + 1, len(agent_roles))
+            turn_messages = self._add_role_context(
+                current_messages, role, turn + 1, len(agent_roles)
+            )
 
             result = await self.run_agent_with_messages(agent_key, turn_messages)
 
@@ -182,7 +184,7 @@ class VandaTeam:
             current_messages = current_messages + [
                 ChatMessage(
                     role=Role.ASSISTANT,
-                    text=f"[{agent_name} ({role})]: {result['output']}"
+                    text=f"[{agent_name} ({role})]: {result['output']}",
                 )
             ]
 
@@ -190,7 +192,7 @@ class VandaTeam:
 
     async def determine_responders_stream(
         self, messages: List[ChatMessage]
-    ):
+    ) -> AsyncIterator[dict[str, Any]]:
         """Streaming version of determine_responders - yields each result as it completes.
 
         Args:
@@ -217,7 +219,7 @@ class VandaTeam:
             current_messages = current_messages + [
                 ChatMessage(
                     role=Role.SYSTEM,
-                    text=f"Collaboration sequence: {role_context}. Each agent should build on previous responses."
+                    text=f"Collaboration sequence: {role_context}. Each agent should build on previous responses.",
                 )
             ]
 
@@ -230,7 +232,9 @@ class VandaTeam:
             if agent_key not in self.agents:
                 continue
 
-            turn_messages = self._add_role_context(current_messages, role, turn + 1, len(agent_roles))
+            turn_messages = self._add_role_context(
+                current_messages, role, turn + 1, len(agent_roles)
+            )
 
             result = await self.run_agent_with_messages(agent_key, turn_messages)
             result["role"] = role
@@ -240,7 +244,9 @@ class VandaTeam:
 
             # Small delay between agents to make discussion visible
             if turn < max_turns - 1:
-                self.logger.debug(f"Agent {agent_key} done, waiting before next agent...")
+                self.logger.debug(
+                    f"Agent {agent_key} done, waiting before next agent..."
+                )
                 await asyncio.sleep(1.0)
 
             # Add response to context for next agent
@@ -248,7 +254,7 @@ class VandaTeam:
             current_messages = current_messages + [
                 ChatMessage(
                     role=Role.ASSISTANT,
-                    text=f"[{agent_name} ({role})]: {result['output']}"
+                    text=f"[{agent_name} ({role})]: {result['output']}",
                 )
             ]
 
@@ -294,7 +300,7 @@ class VandaTeam:
 
         context_msg = ChatMessage(
             role=Role.SYSTEM,
-            text=f"Your role: {role} (turn {turn}/{total}). {guidance}"
+            text=f"Your role: {role} (turn {turn}/{total}). {guidance}",
         )
         return messages + [context_msg]
 

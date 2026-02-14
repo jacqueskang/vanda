@@ -32,7 +32,9 @@ class RouterAgent(BaseAgent):
         """
         self.team = team
 
-    async def analyze_and_route(self, messages: List[ChatMessage]) -> List[Dict[str, str]]:
+    async def analyze_and_route(
+        self, messages: List[ChatMessage]
+    ) -> List[Dict[str, str]]:
         """Analyze chat history and determine which agents should respond.
 
         Uses LLM-based analysis to determine appropriate agents based on context
@@ -318,8 +320,6 @@ Rules:
         Returns:
             List of dicts with 'key' and 'role' (propose/critique/evaluate/respond).
         """
-        import re
-
         try:
             json_start = response_text.find("{")
             json_end = response_text.rfind("}") + 1
