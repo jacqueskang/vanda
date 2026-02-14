@@ -187,6 +187,7 @@ class BaseAgent(Executor):
         credential = DefaultAzureCredential()
         endpoint = model_endpoint
         deployment = final_model_name
+        foundry_api_key = os.getenv("FOUNDRY_API_KEY", "").strip()
 
         if not endpoint or endpoint.startswith("https://models"):
             raise ValueError(
@@ -196,13 +197,26 @@ class BaseAgent(Executor):
                 "3. Update MODEL_NAME in .env"
             )
 
-        client: AzureOpenAIChatClient = AzureOpenAIChatClient(
-            endpoint=endpoint,
-            deployment_name=deployment,
-            ad_token_provider=lambda: credential.get_token(  # type: ignore
-                "https://cognitiveservices.azure.com/.default"
-            ).token,
-        )
+        if foundry_api_key:
+            # Use API key if available
+            client = AzureOpenAIChatClient(
+                endpoint=endpoint,
+                deployment_name=deployment,
+                api_key=foundry_api_key,
+            )
+        else:
+            # Fall back to token provider
+            async def get_token() -> str:
+                token = await credential.get_token(
+                    "https://cognitiveservices.azure.com/.default"
+                )
+                return token.token
+
+            client = AzureOpenAIChatClient(
+                endpoint=endpoint,
+                deployment_name=deployment,
+                ad_token_provider=get_token,
+            )
 
         return client
 
