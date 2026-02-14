@@ -237,7 +237,13 @@ class BaseAgent(Executor):
 
         focus_text = "\n".join(f"{i+1}. {area}" for i, area in enumerate(focus_areas))
 
-        instructions = f"{cls.TEAM_MISSION}\n\n"
+        # Only include team mission for non-router agents
+        agent_key = config.get("key", "")
+        if agent_key != "router":
+            instructions = f"{cls.TEAM_MISSION}\n\n"
+        else:
+            instructions = ""
+
         instructions += f"You are {name}, {role_description}\n\n"
         instructions += f"PERSONALITY: {personality}\n\n"
         instructions += f"FOCUS AREAS:\n{focus_text}\n"
