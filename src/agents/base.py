@@ -245,7 +245,11 @@ class BaseAgent(Executor):
             instructions = ""
 
         instructions += f"You are {name}, {role_description}\n\n"
-        instructions += f"PERSONALITY: {personality}\n\n"
+
+        # Only include personality for non-router agents
+        if agent_key != "router":
+            instructions += f"PERSONALITY: {personality}\n\n"
+
         instructions += f"FOCUS AREAS:\n{focus_text}\n"
 
         # Note: Tools are listed in the prompt, but actual tool objects are passed separately
