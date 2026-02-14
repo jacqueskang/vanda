@@ -234,50 +234,48 @@ class BaseAgent(Executor):
         role_description = config.get("role_description", "")
         personality = config.get("personality", "")
         focus_areas = config.get("focus_areas", [])
+        agent_key = config.get("key", "")
 
         focus_text = "\n".join(f"{i+1}. {area}" for i, area in enumerate(focus_areas))
 
-        # Only include team mission for non-router agents
-        agent_key = config.get("key", "")
-        if agent_key != "router":
-            instructions = f"{cls.TEAM_MISSION}\n\n"
+        if agent_key == "router":
+            # Router gets minimal instructions
+            instructions = f"You are {name}, {role_description}\n\n"
+            instructions += f"FOCUS AREAS:\n{focus_text}\n"
         else:
-            instructions = ""
-
-        instructions += f"You are {name}, {role_description}\n\n"
-
-        # Only include personality for non-router agents
-        if agent_key != "router":
+            # Other agents get full instructions
+            instructions = f"{cls.TEAM_MISSION}\n\n"
+            instructions += f"You are {name}, {role_description}\n\n"
             instructions += f"PERSONALITY: {personality}\n\n"
+            instructions += f"FOCUS AREAS:\n{focus_text}\n"
 
-        instructions += f"FOCUS AREAS:\n{focus_text}\n"
+            # Note: Tools are listed in the prompt, but actual tool objects are passed separately
+            tools_list = config.get("tools", [])
+            if tools_list:
+                tools_text = "You have access to the following tools:\n"
+                # If tools are strings (tool names), just list them
+                if isinstance(tools_list, list) and len(tools_list) > 0:
+                    if isinstance(tools_list[0], str):
+                        for tool_name in tools_list:
+                            tools_text += f"- {tool_name}\n"
+                    else:
+                        # If they are objects, try to get name/description
+                        for tool in tools_list:
+                            tool_name = getattr(tool, "name", str(tool))
+                            tool_desc = getattr(tool, "description", "")
+                            tools_text += f"- {tool_name}"
+                            if tool_desc:
+                                tools_text += f": {tool_desc}"
+                            tools_text += "\n"
+                tools_text += "\nUse these tools when needed."
+                tools_text += " Before calling any tool, ask the user for approval and wait for explicit confirmation."
+                instructions += f"\n{tools_text}\n"
 
-        # Note: Tools are listed in the prompt, but actual tool objects are passed separately
-        tools_list = config.get("tools", [])
-        if tools_list:
-            tools_text = "You have access to the following tools:\n"
-            # If tools are strings (tool names), just list them
-            if isinstance(tools_list, list) and len(tools_list) > 0:
-                if isinstance(tools_list[0], str):
-                    for tool_name in tools_list:
-                        tools_text += f"- {tool_name}\n"
-                else:
-                    # If they are objects, try to get name/description
-                    for tool in tools_list:
-                        tool_name = getattr(tool, "name", str(tool))
-                        tool_desc = getattr(tool, "description", "")
-                        tools_text += f"- {tool_name}"
-                        if tool_desc:
-                            tools_text += f": {tool_desc}"
-                        tools_text += "\n"
-            tools_text += "\nUse these tools when needed."
-            tools_text += " Before calling any tool, ask the user for approval and wait for explicit confirmation."
-            instructions += f"\n{tools_text}\n"
+            instructions += (
+                "\nKeep responses short and high-signal (3-6 bullets or 1-2 short "
+                "paragraphs)."
+            )
 
-        instructions += (
-            "\nKeep responses short and high-signal (3-6 bullets or 1-2 short "
-            "paragraphs)."
-        )
         return instructions
 
     @staticmethod
